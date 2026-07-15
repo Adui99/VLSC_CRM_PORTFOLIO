@@ -3,8 +3,10 @@ import HeroSection from "@/components/sections/HeroSection";
 import TrustBySection from "@/components/sections/TrustBySection";
 import TechStackSection from "@/components/sections/TechStackSection";
 import AboutSection from "@/components/sections/AboutSection";
+import StatsSection from "@/components/sections/StatsSection";
 import ExperienceSection from "@/components/sections/ExperienceSection";
 import ProjectsSection from "@/components/sections/ProjectsSection";
+import TestimonialsSection from "@/components/sections/TestimonialsSection";
 import FAQSection from "@/components/sections/FAQSection";
 import ContactSection from "@/components/sections/ContactSection";
 import LeadModal from "@/components/ui/LeadModal";
@@ -26,8 +28,10 @@ export default function Home() {
         <TrustBySection />
         <TechStackSection />
         <AboutSection />
+        <StatsSection />
         <ExperienceSection />
         <ProjectsSection />
+        <TestimonialsSection />
         <FAQSection />
         <ContactSection />
       </div>
