@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import MagneticButton from "../ui/MagneticButton";
+
 import { useModalStore } from "@/store/useModalStore";
 
 export default function ContactSection() {
@@ -39,7 +40,7 @@ export default function ContactSection() {
           transition={{ delay: 0.2, duration: 0.8, type: "spring" }}
           onClick={openModal}
         >
-          <MagneticButton intensity={60} className="bg-amber-500 text-zinc-950 px-12 py-6 text-xl rounded-full hover:bg-zinc-50 transition-colors">
+          <MagneticButton className="bg-amber-500 text-zinc-950 px-12 py-6 text-xl rounded-full hover:bg-transparent hover:text-amber-500 hover:border hover:border-amber-500 font-medium transition-colors">
             hello@portfolio.com
           </MagneticButton>
         </motion.div>

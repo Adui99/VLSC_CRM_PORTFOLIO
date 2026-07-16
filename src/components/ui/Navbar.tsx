@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { useModalStore } from "@/store/useModalStore";
 import { useState, useEffect } from "react";
+import { ShimmerButton } from "./ShimmerButton";
 
 const navLinks = [
   { name: "Work", href: "#projects" },
@@ -93,12 +94,15 @@ export default function Navbar() {
 
       {/* Right: CTA */}
       <div className="pointer-events-auto">
-        <button 
+        <ShimmerButton 
           onClick={openModal}
-          className="px-6 py-3 rounded-full border border-amber-500/50 bg-amber-500/10 text-amber-500 hover:bg-amber-500 hover:text-zinc-950 backdrop-blur-xl shadow-2xl transition-all font-medium text-sm"
+          shimmerColor="#f59e0b"
+          shimmerDuration="6s"
+          background="rgba(245, 158, 11, 0.1)"
+          className="rounded-full border border-amber-500/50 text-amber-500 hover:!bg-amber-500 hover:!text-zinc-950 backdrop-blur-xl shadow-2xl transition-all font-medium text-sm px-6 py-3"
         >
           Let's Talk
-        </button>
+        </ShimmerButton>
       </div>
     </motion.nav>
   );

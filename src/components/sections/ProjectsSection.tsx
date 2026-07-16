@@ -64,46 +64,71 @@ export default function ProjectsSection() {
             return (
               <motion.div
                 key={project.id}
-                style={{ y: yTransform }}
+                style={{ 
+                  y: yTransform,
+                  "--spread": "90deg",
+                  "--shimmer-color": "#f59e0b",
+                  "--radius": "2.5rem",
+                  "--speed": "3s",
+                  "--cut": "2px",
+                  "--bg": "#18181b" 
+                } as any}
                 whileHover="hover"
-                className={`relative group ${project.colSpan} h-[400px] md:h-[500px] rounded-[2.5rem] overflow-hidden bg-zinc-900 border border-zinc-800`}
+                className={`relative group ${project.colSpan} h-[400px] md:h-[500px] rounded-[var(--radius)] overflow-hidden bg-zinc-900 border border-zinc-800`}
               >
-                {/* Image */}
-                <motion.div
-                  variants={{
-                    hover: { scale: 1.05 }
+                {/* spark container with border mask */}
+                <div 
+                  style={{
+                    WebkitMask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
+                    WebkitMaskComposite: "xor",
+                    maskComposite: "exclude",
+                    padding: "var(--cut)",
+                    borderRadius: "var(--radius)"
                   }}
-                  transition={{ type: "spring", stiffness: 100, damping: 20 }}
-                  className="absolute inset-0 w-full h-full"
+                  className="absolute inset-0 overflow-hidden opacity-0 transition-opacity duration-300 group-hover:opacity-100 z-10 pointer-events-none"
                 >
-                  <img src={project.image} alt={project.title} className="w-full h-full object-cover opacity-60 mix-blend-luminosity group-hover:mix-blend-normal transition-all duration-700" />
-                </motion.div>
-
-                {/* Overlay Gradient */}
-                <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/20 to-transparent opacity-80" />
-
-                {/* Content */}
-                <div className="absolute inset-0 p-8 flex flex-col justify-end">
-                  <div className="flex justify-between items-end">
-                    <div>
-                      <p className="text-amber-500 font-mono text-xs tracking-widest uppercase mb-2">
-                        {project.category}
-                      </p>
-                      <h3 className="text-3xl font-bold tracking-tight text-zinc-50">
-                        {project.title}
-                      </h3>
-                    </div>
-                    
-                    <motion.div
-                      variants={{
-                        hover: { scale: 1.1, rotate: 45, backgroundColor: "#ffb703", color: "#09090b" }
-                      }}
-                      className="w-12 h-12 rounded-full border border-zinc-700 flex items-center justify-center bg-zinc-900/50 backdrop-blur-md"
-                    >
-                      <ArrowUpRight size={20} weight="bold" />
-                    </motion.div>
-                  </div>
+                  <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[300%] aspect-square animate-spin-around [background:conic-gradient(from_-270deg_at_50%_50%,transparent_0,var(--shimmer-color)_var(--spread),transparent_var(--spread))]" />
                 </div>
+
+                {/* Content Container */}
+                <div className="absolute inset-0 rounded-[var(--radius)] overflow-hidden z-0 pointer-events-auto">
+                  {/* Image */}
+                  <motion.div
+                      variants={{
+                        hover: { scale: 1.05 }
+                      }}
+                      transition={{ type: "spring", stiffness: 100, damping: 20 }}
+                      className="absolute inset-0 w-full h-full"
+                    >
+                      <img src={project.image} alt={project.title} className="w-full h-full object-cover opacity-60 mix-blend-luminosity group-hover:mix-blend-normal transition-all duration-700" />
+                    </motion.div>
+
+                    {/* Overlay Gradient */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/20 to-transparent opacity-80" />
+
+                    {/* Content */}
+                    <div className="absolute inset-0 p-8 flex flex-col justify-end">
+                      <div className="flex justify-between items-end">
+                        <div>
+                          <p className="text-amber-500 font-mono text-xs tracking-widest uppercase mb-2">
+                            {project.category}
+                          </p>
+                          <h3 className="text-3xl font-bold tracking-tight text-zinc-50">
+                            {project.title}
+                          </h3>
+                        </div>
+                        
+                        <motion.div
+                          variants={{
+                            hover: { scale: 1.1, rotate: 45, backgroundColor: "#ffb703", color: "#09090b" }
+                          }}
+                          className="w-12 h-12 rounded-full border border-zinc-700 flex items-center justify-center bg-zinc-900/50 backdrop-blur-md"
+                        >
+                          <ArrowUpRight size={20} weight="bold" />
+                        </motion.div>
+                      </div>
+                    </div>
+                  </div>
               </motion.div>
             );
           })}

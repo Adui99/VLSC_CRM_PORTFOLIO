@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { ArrowDownRight } from "@phosphor-icons/react";
 import MagneticButton from "../ui/MagneticButton";
+
 import { TextReveal } from "../ui/TextReveal";
 import Scene3D from "../3d/Scene3D";
 import Terminal from "../ui/Terminal";
@@ -61,11 +62,10 @@ export default function HeroSection() {
             }}
           >
             <MagneticButton 
-              intensity={50} 
-              className="bg-zinc-50 text-zinc-950 px-8 py-4 gap-2 hover:bg-amber-500 hover:text-zinc-950"
+              className="bg-zinc-100 text-zinc-950 px-8 py-4 flex items-center gap-2 hover:bg-amber-500 hover:text-zinc-950 transition-colors font-medium rounded-full"
               onClick={() => document.getElementById('projects')?.scrollIntoView({ behavior: 'smooth' })}
             >
-              <span>View Selected Work</span>
+              View Selected Work
               <ArrowDownRight weight="bold" />
             </MagneticButton>
           </motion.div>
