@@ -20,7 +20,7 @@ export function TextReveal({ text, className }: { text: string; className?: stri
               animate={isInView ? { y: 0, opacity: 1, rotateZ: 0 } : { y: "100%", opacity: 0, rotateZ: 5 }}
               transition={{
                 duration: 2.5,
-                ease: [0.16, 1, 0.3, 1], // fluid CSS cubic-bezier
+                ease: [0.16, 1, 0.3, 1] as const, // fluid CSS cubic-bezier
                 delay: i * 0.05,
               }}
               className="origin-bottom-left"

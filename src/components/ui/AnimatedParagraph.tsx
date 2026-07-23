@@ -33,7 +33,7 @@ export default function AnimatedParagraph({ segments, className = "" }: Animated
       y: 0,
       transition: {
         duration: 2.5,
-        ease: [0.16, 1, 0.3, 1]
+        ease: [0.16, 1, 0.3, 1] as const
       },
     },
   };

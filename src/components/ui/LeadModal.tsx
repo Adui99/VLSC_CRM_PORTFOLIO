@@ -3,10 +3,12 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "@phosphor-icons/react";
 import { useModalStore } from "@/store/useModalStore";
+import { useCrmStore } from "@/store/useCrmStore";
 import { useState } from "react";
 
 export default function LeadModal() {
   const { isOpen, closeModal } = useModalStore();
+  const addLead = useCrmStore((state) => state.addLead);
   const [status, setStatus] = useState<"idle" | "loading" | "success">("idle");
   const [formData, setFormData] = useState({ name: "", email: "", message: "" });
 
@@ -17,13 +19,23 @@ export default function LeadModal() {
     try {
       const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxemmrMl182B1Wag6mJ7Jcoa5ZpUwsJA7EsPhPHokFYXooZeGRjOwt9XAPxgG_PlMDaTg/exec";
       
-      await fetch(GOOGLE_SCRIPT_URL, {
+      fetch(GOOGLE_SCRIPT_URL, {
         method: "POST",
         mode: "no-cors",
         body: JSON.stringify(formData),
         headers: {
           "Content-Type": "text/plain;charset=utf-8", 
         }
+      }).catch((err) => console.error("GAS error:", err));
+
+      // Sync lead directly to CRM store
+      addLead({
+        name: formData.name,
+        email: formData.email,
+        message: formData.message,
+        source: "Landing Page Modal",
+        dealValue: 15000,
+        status: "new"
       });
 
       setStatus("success");

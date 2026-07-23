@@ -27,7 +27,7 @@ export default function BlurText({ text, className = "", delay = 0 }: BlurTextPr
       y: 0,
       transition: {
         duration: 2.5,
-        ease: [0.16, 1, 0.3, 1]
+        ease: [0.16, 1, 0.3, 1] as const
       },
     },
     hidden: {
