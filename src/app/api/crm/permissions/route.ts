@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
-import { sql } from '@/lib/db';
-import { PermissionMatrix, UserRole } from '@/types/crm';
-import { validateServerRole } from '@/lib/auth-server';
+import { sql } from '@/core/db/db';
+import { PermissionMatrix, UserRole } from '@/features/crm/types/crm';
+import { validateServerRole } from '@/core/auth/auth';
 
 export async function GET() {
   try {
@@ -33,9 +33,10 @@ export async function GET() {
     }
 
     return NextResponse.json({ success: true, permissions });
-  } catch (error: any) {
-    console.error('Error fetching permissions from Neon:', error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    const err = error as Error;
+    console.error('Error fetching permissions from Neon:', err);
+    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
   }
 }
 
@@ -70,8 +71,9 @@ export async function POST(req: Request) {
     );
 
     return NextResponse.json({ success: true });
-  } catch (error: any) {
-    console.error('Error updating permission in Neon:', error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    const err = error as Error;
+    console.error('Error updating permission in Neon:', err);
+    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
   }
 }

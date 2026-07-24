@@ -1,13 +1,12 @@
 import { NextResponse } from 'next/server';
-import { sql } from '@/lib/db';
-import { Lead, LeadNote, LeadStatus } from '@/types/crm';
-import { validateServerRole } from '@/lib/auth-server';
-import { validateLeadStatusTransition } from '@/lib/lead-state-machine';
+import { sql } from '@/core/db/db';
+import { Lead, LeadStatus } from '@/features/crm/types/crm';
+import { validateServerRole } from '@/core/auth/auth';
+import { validateLeadStatusTransition } from '@/features/crm/services/lead-state-machine';
 
 export async function GET(req: Request) {
   try {
-    const authCheck = validateServerRole(req, ['super_admin', 'crm_manager', 'sales_rep']);
-    const userRole = authCheck.role || 'sales_rep';
+    validateServerRole(req, ['super_admin', 'crm_manager', 'sales_rep']);
 
     // Single optimized query joining leads and lead_notes via PostgreSQL JSON_AGG
     const rawLeads = await sql`
@@ -44,26 +43,29 @@ export async function GET(req: Request) {
       id: l.id as string,
       name: l.name as string,
       email: l.email as string,
-      phone: l.phone as string || undefined,
-      company: l.company as string || undefined,
-      status: l.status as any,
+      phone: (l.phone as string) || undefined,
+      company: (l.company as string) || undefined,
+      status: l.status as LeadStatus,
       dealValue: Math.max(0, Number(l.dealValue) || 0),
       source: l.source as string,
-      message: l.message as string || undefined,
+      message: (l.message as string) || undefined,
       createdAt: new Date(l.createdAt as string).toISOString(),
-      assignedTo: l.assignedTo as string || undefined,
-      notes: Array.isArray(l.notes) ? l.notes.map((n: any) => ({
-        id: n.id,
-        content: n.content,
-        author: n.author,
-        createdAt: new Date(n.createdAt).toISOString()
-      })) : [],
+      assignedTo: (l.assignedTo as string) || undefined,
+      notes: Array.isArray(l.notes)
+        ? (l.notes as Array<{ id: string; content: string; author: string; createdAt: string }>).map((n) => ({
+            id: n.id,
+            content: n.content,
+            author: n.author,
+            createdAt: new Date(n.createdAt).toISOString(),
+          }))
+        : [],
     }));
 
     return NextResponse.json({ success: true, leads });
-  } catch (error: any) {
-    console.error('Error fetching leads from Neon:', error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    const err = error as Error;
+    console.error('Error fetching leads from Neon:', err);
+    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
   }
 }
 
@@ -100,9 +102,10 @@ export async function POST(req: Request) {
     };
 
     return NextResponse.json({ success: true, lead: newLead });
-  } catch (error: any) {
-    console.error('Error creating lead in Neon:', error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    const err = error as Error;
+    console.error('Error creating lead in Neon:', err);
+    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
   }
 }
 
@@ -173,9 +176,10 @@ export async function PATCH(req: Request) {
     }
 
     return NextResponse.json({ success: false, error: 'Invalid patch type' }, { status: 400 });
-  } catch (error: any) {
-    console.error('Error updating lead in Neon:', error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    const err = error as Error;
+    console.error('Error updating lead in Neon:', err);
+    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
   }
 }
 
@@ -196,8 +200,9 @@ export async function DELETE(req: Request) {
     `;
 
     return NextResponse.json({ success: true });
-  } catch (error: any) {
-    console.error('Error deleting lead from Neon:', error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    const err = error as Error;
+    console.error('Error deleting lead from Neon:', err);
+    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
   }
 }

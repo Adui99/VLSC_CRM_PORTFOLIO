@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { sql } from '@/lib/db';
-import { validateServerRole } from '@/lib/auth-server';
+import { sql } from '@/core/db/db';
+import { validateServerRole } from '@/core/auth/auth';
 
 async function ensureTable() {
   await sql`
@@ -29,9 +29,10 @@ export async function GET(req: Request) {
     `;
 
     return NextResponse.json({ success: true, logs: rows });
-  } catch (error: any) {
-    console.error('Error fetching audit logs:', error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    const err = error as Error;
+    console.error('Error fetching audit logs:', err);
+    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
   }
 }
 
@@ -51,8 +52,9 @@ export async function POST(req: Request) {
     `;
 
     return NextResponse.json({ success: true });
-  } catch (error: any) {
-    console.error('Error inserting audit log:', error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    const err = error as Error;
+    console.error('Error inserting audit log:', err);
+    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
   }
 }

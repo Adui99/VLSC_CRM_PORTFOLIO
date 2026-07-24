@@ -1,17 +1,17 @@
-import Navbar from "@/components/ui/Navbar";
-import HeroSection from "@/components/sections/HeroSection";
-import TrustBySection from "@/components/sections/TrustBySection";
-import TechStackSection from "@/components/sections/TechStackSection";
-import AboutSection from "@/components/sections/AboutSection";
-import StatsSection from "@/components/sections/StatsSection";
-import ExperienceSection from "@/components/sections/ExperienceSection";
-import ProjectsSection from "@/components/sections/ProjectsSection";
-import TestimonialsSection from "@/components/sections/TestimonialsSection";
-import FAQSection from "@/components/sections/FAQSection";
-import ContactSection from "@/components/sections/ContactSection";
-import LeadModal from "@/components/ui/LeadModal";
-import LoadingScreen from "@/components/ui/LoadingScreen";
-import ScrollProgressBar from "@/components/ui/ScrollProgressBar";
+import Navbar from "@/features/landing/ui/Navbar";
+import HeroSection from "@/features/landing/components/HeroSection";
+import TrustBySection from "@/features/landing/components/TrustBySection";
+import TechStackSection from "@/features/landing/components/TechStackSection";
+import AboutSection from "@/features/landing/components/AboutSection";
+import StatsSection from "@/features/landing/components/StatsSection";
+import ExperienceSection from "@/features/landing/components/ExperienceSection";
+import ProjectsSection from "@/features/landing/components/ProjectsSection";
+import TestimonialsSection from "@/features/landing/components/TestimonialsSection";
+import FAQSection from "@/features/landing/components/FAQSection";
+import ContactSection from "@/features/landing/components/ContactSection";
+import LeadModal from "@/features/landing/ui/LeadModal";
+import LoadingScreen from "@/features/landing/ui/LoadingScreen";
+import ScrollProgressBar from "@/features/landing/ui/ScrollProgressBar";
 
 export default function Home() {
   return (

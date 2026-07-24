@@ -1,15 +1,15 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useCrmStore } from "@/store/useCrmStore";
-import CrmSidebar from "@/components/crm/CrmSidebar";
-import CrmHeader from "@/components/crm/CrmHeader";
-import CrmKpiStats from "@/components/crm/CrmKpiStats";
-import CrmLeadManager from "@/components/crm/CrmLeadManager";
-import CrmRbacManager from "@/components/crm/CrmRbacManager";
-import CrmUserSettings from "@/components/crm/CrmUserSettings";
-import CrmLoginModal from "@/components/crm/CrmLoginModal";
-import CrmAuditLog from "@/components/crm/CrmAuditLog";
+import { useCrmStore } from "@/features/crm/store/useCrmStore";
+import CrmSidebar from "@/features/crm/components/CrmSidebar";
+import CrmHeader from "@/features/crm/components/CrmHeader";
+import CrmKpiStats from "@/features/crm/components/CrmKpiStats";
+import CrmLeadManager from "@/features/crm/components/CrmLeadManager";
+import CrmRbacManager from "@/features/crm/components/CrmRbacManager";
+import CrmUserSettings from "@/features/crm/components/CrmUserSettings";
+import CrmLoginModal from "@/features/crm/components/CrmLoginModal";
+import CrmAuditLog from "@/features/crm/components/CrmAuditLog";
 import { ShieldWarning } from "@phosphor-icons/react";
 
 export default function CrmAdminPage() {
@@ -19,9 +19,10 @@ export default function CrmAdminPage() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
     fetchDataFromDb();
-  }, []);
+  }, [fetchDataFromDb]);
 
   if (!mounted) return null;
 

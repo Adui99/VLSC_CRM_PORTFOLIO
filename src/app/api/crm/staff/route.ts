@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
-import { sql } from '@/lib/db';
-import { StaffUser } from '@/types/crm';
-import { validateServerRole } from '@/lib/auth-server';
+import { sql } from '@/core/db/db';
+import { StaffUser, UserRole } from '@/features/crm/types/crm';
+import { validateServerRole } from '@/core/auth/auth';
 
 export async function GET() {
   try {
@@ -22,16 +22,17 @@ export async function GET() {
       id: s.id as string,
       name: s.name as string,
       email: s.email as string,
-      role: s.role as any,
-      status: s.status as any,
-      avatar: s.avatar as string || undefined,
+      role: s.role as UserRole,
+      status: s.status as 'active' | 'inactive',
+      avatar: (s.avatar as string) || undefined,
       joinedDate: s.joinedDate as string,
     }));
 
     return NextResponse.json({ success: true, staffMembers });
-  } catch (error: any) {
-    console.error('Error fetching staff from Neon:', error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    const err = error as Error;
+    console.error('Error fetching staff from Neon:', err);
+    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
   }
 }
 
@@ -62,9 +63,10 @@ export async function POST(req: Request) {
     };
 
     return NextResponse.json({ success: true, staff: newStaff });
-  } catch (error: any) {
-    console.error('Error adding staff to Neon:', error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    const err = error as Error;
+    console.error('Error adding staff to Neon:', err);
+    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
   }
 }
 
@@ -74,7 +76,7 @@ export async function PATCH(req: Request) {
     if (!authCheck.authorized) return authCheck.errorResponse!;
 
     const body = await req.json();
-    const { type, staffId, role, status, name, email, avatar } = body;
+    const { type, staffId, role, name, email, avatar } = body;
 
     if (type === 'update_role' || type === 'toggle_status') {
       const roleCheck = validateServerRole(req, ['super_admin', 'crm_manager']);
@@ -108,9 +110,10 @@ export async function PATCH(req: Request) {
     }
 
     return NextResponse.json({ success: false, error: 'Invalid patch type' }, { status: 400 });
-  } catch (error: any) {
-    console.error('Error updating staff in Neon:', error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    const err = error as Error;
+    console.error('Error updating staff in Neon:', err);
+    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
   }
 }
 
@@ -131,8 +134,9 @@ export async function DELETE(req: Request) {
     `;
 
     return NextResponse.json({ success: true });
-  } catch (error: any) {
-    console.error('Error deleting staff from Neon:', error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    const err = error as Error;
+    console.error('Error deleting staff from Neon:', err);
+    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
   }
 }
