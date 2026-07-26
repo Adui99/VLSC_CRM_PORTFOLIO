@@ -31,7 +31,7 @@ import CrmLeadDetailModal from "./CrmLeadDetailModal";
 import { isCorporateEmail } from "@/features/crm/utils/calculateLeadScore";
 
 export default function CrmLeadManager() {
-  const { leads, theme, deleteLead, permissions, currentUser, addLead, inspectingLead, setInspectingLead, updateLeadStatus } = useCrmStore();
+  const { leads, theme, deleteLead, permissions, currentUser, addLead, inspectingLead, setInspectingLead, updateLeadStatus, reorderLeadsInColumn } = useCrmStore();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
   const [viewMode, setViewMode] = useState<'table' | 'kanban'>('table');
@@ -210,8 +210,13 @@ export default function CrmLeadManager() {
       targetStatus = overLead.status;
     }
 
-    // Same column — nothing to do
-    if (draggedLead.status === targetStatus) return;
+    // Same column — reorder card positions
+    if (draggedLead.status === targetStatus) {
+      if (active.id !== over.id) {
+        reorderLeadsInColumn(active.id as string, over.id as string);
+      }
+      return;
+    }
 
     // F4: dragging into closed requires confirm
     if (targetStatus === 'closed_won' || targetStatus === 'closed_lost') {

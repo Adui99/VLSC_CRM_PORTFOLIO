@@ -10,6 +10,8 @@ export interface LeadScoreInput {
   role?: string;
   services?: string[];
   message?: string;
+  dealValue?: number;
+  source?: string;
 }
 
 export interface LeadScoreResult {
@@ -122,6 +124,34 @@ export function calculateLeadScore(input: LeadScoreInput): LeadScoreResult {
     } else if (msgLower.trim().length > 15) {
       score += 5;
     }
+  }
+
+  // 9. Deal Value / Budget Weighting (B2B Financial Priority)
+  if (typeof input.dealValue === "number" && input.dealValue > 0) {
+    if (input.dealValue >= 50000) {
+      score += 20;
+    } else if (input.dealValue >= 20000) {
+      score += 10;
+    } else {
+      score += 5;
+    }
+  }
+
+  // 10. Lead Source Weighting (High Conversion Channel Priority)
+  if (input.source) {
+    const srcLower = input.source.toLowerCase();
+    if (srcLower.includes("referral") || srcLower.includes("giới thiệu") || srcLower.includes("cold email")) {
+      score += 15;
+    } else if (srcLower.includes("event") || srcLower.includes("social")) {
+      score += 10;
+    } else if (srcLower.includes("website") || srcLower.includes("landing")) {
+      score += 5;
+    }
+  }
+
+  // 11. Enterprise Corporate Deal Bonus (Corporate Email + High Deal Value >= 50k)
+  if (isCorpDomain && typeof input.dealValue === "number" && input.dealValue >= 50000) {
+    score += 10;
   }
 
   // Cap at 100

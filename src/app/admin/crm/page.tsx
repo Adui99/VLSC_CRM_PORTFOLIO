@@ -19,16 +19,23 @@ export default function CrmAdminPage() {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
 
+  const currentRole = testRole || currentUser?.role || 'sales_rep';
+
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
     fetchDataFromDb();
   }, [fetchDataFromDb]);
 
+  useEffect(() => {
+    if (currentRole === 'super_admin') {
+      setActiveTab('analytics');
+    }
+  }, [currentUser?.id, currentRole]);
+
   if (!mounted) return null;
 
   const isLight = theme === "light";
-  const currentRole = testRole || currentUser?.role || 'sales_rep';
   const userPerms = permissions[currentRole];
 
   return (

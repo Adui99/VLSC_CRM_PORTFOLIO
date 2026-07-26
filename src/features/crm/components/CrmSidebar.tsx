@@ -78,6 +78,33 @@ export default function CrmSidebar({ activeTab, setActiveTab, setIsOpenMobile }:
           </span>
           <nav className="mt-2 space-y-1.5">
             
+            {/* Executive Analytics (Visible FIRST for Super Admin) */}
+            {isSuperAdmin && (
+              <motion.button
+                whileHover={{ x: 3 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => {
+                  setActiveTab('analytics');
+                  if (setIsOpenMobile) setIsOpenMobile(false);
+                }}
+                className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-sm font-extrabold transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] cursor-pointer outline-none focus:outline-none focus-visible:outline-none select-none ${
+                  activeTab === 'analytics'
+                    ? "bg-amber-500 text-slate-950 shadow-md shadow-amber-500/25"
+                    : isLight
+                    ? "text-slate-800 hover:bg-slate-100 hover:text-slate-950"
+                    : "text-zinc-300 hover:bg-zinc-800 hover:text-zinc-50"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <ChartBar size={20} weight={activeTab === 'analytics' ? "bold" : "regular"} />
+                  <span>Executive Analytics</span>
+                </div>
+                <span className="text-[10px] font-black uppercase px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-800 dark:text-amber-300">
+                  Super Admin
+                </span>
+              </motion.button>
+            )}
+
             {/* Lead Dashboard Button (Shared Workspace) */}
             <motion.button
               whileHover={{ x: 3 }}
@@ -106,33 +133,6 @@ export default function CrmSidebar({ activeTab, setActiveTab, setIsOpenMobile }:
                 {totalLeads}
               </span>
             </motion.button>
-
-            {/* Executive Analytics (Visible ONLY for Super Admin) */}
-            {isSuperAdmin && (
-              <motion.button
-                whileHover={{ x: 3 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => {
-                  setActiveTab('analytics');
-                  if (setIsOpenMobile) setIsOpenMobile(false);
-                }}
-                className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-sm font-extrabold transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] cursor-pointer outline-none focus:outline-none focus-visible:outline-none select-none ${
-                  activeTab === 'analytics'
-                    ? "bg-amber-500 text-slate-950 shadow-md shadow-amber-500/25"
-                    : isLight
-                    ? "text-slate-800 hover:bg-slate-100 hover:text-slate-950"
-                    : "text-zinc-300 hover:bg-zinc-800 hover:text-zinc-50"
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <ChartBar size={20} weight={activeTab === 'analytics' ? "bold" : "regular"} />
-                  <span>Executive Analytics</span>
-                </div>
-                <span className="text-[10px] font-black uppercase px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-800 dark:text-amber-300">
-                  Super Admin
-                </span>
-              </motion.button>
-            )}
 
             {/* Team & RBAC (Visible for Super Admin and Manager) */}
             {canAccessStaff && (

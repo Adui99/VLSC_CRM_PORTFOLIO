@@ -12,6 +12,8 @@ import {
   Flame,
   Spinner,
   Funnel,
+  DownloadSimple,
+  Trash,
 } from "@phosphor-icons/react";
 
 const ACTION_CONFIG: Record<AuditAction, { label: string; icon: React.ReactNode; color: string }> = {
@@ -52,13 +54,60 @@ const FILTER_OPTIONS: { key: AuditAction | "all"; label: string }[] = [
 ];
 
 export default function CrmAuditLog() {
-  const { auditLogs, fetchAuditLogs, theme } = useCrmStore();
+  const { auditLogs, fetchAuditLogs, theme, currentUser } = useCrmStore();
   const [selectedFilter, setSelectedFilter] = useState<AuditAction | "all">("all");
+  const [purging, setPurging] = useState(false);
   const isLight = theme === "light";
+  const isSuperAdmin = currentUser?.role === "super_admin";
 
   useEffect(() => {
     fetchAuditLogs();
   }, [fetchAuditLogs]);
+
+  const handleExportCsv = () => {
+    if (auditLogs.length === 0) return;
+    const headers = ["ID", "Action", "Description", "Performed By", "Created At"];
+    const rows = auditLogs.map((l) => [
+      `"${l.id}"`,
+      `"${l.action}"`,
+      `"${l.description.replace(/"/g, '""')}"`,
+      `"${l.performedBy}"`,
+      `"${new Date(l.createdAt).toLocaleString()}"`,
+    ]);
+    const csvContent = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", `ktd_crm_audit_logs_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handlePurgeOldLogs = async () => {
+    if (!window.confirm("Bạn có chắc chắn muốn dọn dẹp các Audit Log đã cũ hơn 30 ngày khỏi hệ thống?")) return;
+    try {
+      setPurging(true);
+      const current = useCrmStore.getState().currentUser;
+      const res = await fetch("/api/crm/audit-logs?days=30", {
+        method: "DELETE",
+        headers: {
+          "x-user-role": current?.role || "super_admin",
+          "x-user-id": current?.id || "",
+        },
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert(data.message || "Đã dọn dẹp log cũ thành công.");
+        fetchAuditLogs();
+      }
+    } catch (err) {
+      console.error("Error purging logs:", err);
+    } finally {
+      setPurging(false);
+    }
+  };
 
   const filteredLogs = selectedFilter === "all"
     ? auditLogs
@@ -67,11 +116,11 @@ export default function CrmAuditLog() {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Header Card */}
-      <div className={`p-6 sm:p-8 rounded-3xl border transition-colors ${
+      <div className={`p-6 sm:p-8 rounded-3xl border flex flex-col md:flex-row md:items-center justify-between gap-4 transition-colors ${
         isLight ? "bg-white border-slate-200 shadow-sm" : "bg-zinc-900 border-zinc-800"
       }`}>
         <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-slate-700 to-slate-500 dark:from-zinc-600 dark:to-zinc-400 flex items-center justify-center text-white shadow-lg">
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-slate-700 to-slate-500 dark:from-zinc-600 dark:to-zinc-400 flex items-center justify-center text-white shadow-lg shrink-0">
             <ClockCounterClockwise size={30} weight="bold" />
           </div>
           <div>
@@ -79,9 +128,34 @@ export default function CrmAuditLog() {
               System Audit Log
             </h2>
             <p className={`text-sm mt-1 font-medium ${isLight ? "text-slate-700" : "text-zinc-400"}`}>
-              Immutable record of all critical actions performed in the CRM.
+              Immutable record of all critical actions performed in the CRM. Max 1,000 auto-pruned logs.
             </p>
           </div>
+        </div>
+
+        {/* Audit Actions Bar: Export & Purge */}
+        <div className="flex items-center gap-2.5">
+          <button
+            onClick={handleExportCsv}
+            disabled={auditLogs.length === 0}
+            className="px-3.5 py-2.5 rounded-xl font-extrabold text-xs bg-amber-500 hover:bg-amber-600 text-slate-950 flex items-center gap-2 cursor-pointer transition-all shadow-md active:scale-95 disabled:opacity-50"
+            title="Export Audit Logs to CSV"
+          >
+            <DownloadSimple size={16} weight="bold" />
+            <span>Export CSV</span>
+          </button>
+
+          {isSuperAdmin && (
+            <button
+              onClick={handlePurgeOldLogs}
+              disabled={purging}
+              className="px-3.5 py-2.5 rounded-xl font-extrabold text-xs bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 border border-red-500/30 flex items-center gap-2 cursor-pointer transition-all active:scale-95 disabled:opacity-50"
+              title="Purge logs older than 30 days"
+            >
+              {purging ? <Spinner size={16} className="animate-spin" /> : <Trash size={16} weight="bold" />}
+              <span>Clear &gt;30d Logs</span>
+            </button>
+          )}
         </div>
       </div>
 

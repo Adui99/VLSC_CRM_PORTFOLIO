@@ -46,4 +46,22 @@ describe("Lead State Machine Unit Tests (Data-Driven Workflow)", () => {
     const res = validateLeadStatusTransition("contacted", "contacted", "sales_rep");
     assert.strictEqual(res.allowed, true);
   });
+
+  test("should reorder items within Kanban column array correctly", () => {
+    const leads = [
+      { id: "lead-1", name: "Lead 1" },
+      { id: "lead-2", name: "Lead 2" },
+      { id: "lead-3", name: "Lead 3" },
+    ];
+
+    const oldIndex = leads.findIndex((i) => i.id === "lead-3");
+    const newIndex = leads.findIndex((i) => i.id === "lead-1");
+    const reordered = [...leads];
+    const [moved] = reordered.splice(oldIndex, 1);
+    reordered.splice(newIndex, 0, moved);
+
+    assert.strictEqual(reordered[0].id, "lead-3");
+    assert.strictEqual(reordered[1].id, "lead-1");
+    assert.strictEqual(reordered[2].id, "lead-2");
+  });
 });

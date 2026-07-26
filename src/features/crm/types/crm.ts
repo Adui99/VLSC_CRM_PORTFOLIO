@@ -26,6 +26,7 @@ export interface Lead {
   message?: string;
   score?: number;
   scoreCategory?: ScoreCategory;
+  orderIndex?: number;
   createdAt: string;
   assignedTo?: string;
   notes: LeadNote[];

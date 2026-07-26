@@ -60,4 +60,33 @@ describe("calculateLeadScore Unit Tests", () => {
     assert.ok(result.score < 80, `Expected score < 80, got ${result.score}`);
     assert.notStrictEqual(result.category, "hot");
   });
+
+  test("should score Enterprise Corporate deals with $50k+ budget & Referral source as HOT (>=80)", () => {
+    const fptLead = {
+      name: "Nguyễn Hoàng Long",
+      email: "long.nguyen@fpt-software.com",
+      phone: "0909123456",
+      company: "FPT Software Global",
+      dealValue: 120000,
+      source: "Referral / Giới thiệu",
+    };
+
+    const vngLead = {
+      name: "Trần Quốc Bảo",
+      email: "bao.tran@vng-corp.vn",
+      phone: "0909987654",
+      company: "VNG Corporation",
+      dealValue: 85000,
+      source: "Website Contact Form",
+    };
+
+    const fptResult = calculateLeadScore(fptLead);
+    const vngResult = calculateLeadScore(vngLead);
+
+    assert.ok(fptResult.score >= 80, `Expected FPT lead score >= 80, got ${fptResult.score}`);
+    assert.strictEqual(fptResult.category, "hot");
+
+    assert.ok(vngResult.score >= 80, `Expected VNG lead score >= 80, got ${vngResult.score}`);
+    assert.strictEqual(vngResult.category, "hot");
+  });
 });

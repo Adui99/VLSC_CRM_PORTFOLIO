@@ -97,6 +97,7 @@ interface CrmStoreState {
   fetchDataFromDb: () => Promise<void>;
   addLead: (lead: Omit<Lead, 'id' | 'createdAt' | 'notes'>) => void;
   updateLeadStatus: (id: string, status: LeadStatus) => void;
+  reorderLeadsInColumn: (activeId: string, overId: string) => void;
   addLeadNote: (leadId: string, content: string) => void;
   deleteLead: (id: string) => void;
 
@@ -202,7 +203,6 @@ export const useCrmStore = create<CrmStoreState>()(
 
           if (leadsData.success && Array.isArray(leadsData.leads)) {
             const scoredLeads = leadsData.leads.map((l: Lead) => {
-              if (l.score !== undefined && l.scoreCategory) return l;
               const calculated = calculateLeadScore(l);
               return { ...l, score: calculated.score, scoreCategory: calculated.category };
             });
@@ -244,6 +244,8 @@ export const useCrmStore = create<CrmStoreState>()(
           role: newLeadData.role,
           services: newLeadData.services,
           message: newLeadData.message,
+          dealValue: newLeadData.dealValue,
+          source: newLeadData.source,
         });
 
         const newLead: Lead = {
@@ -350,6 +352,20 @@ export const useCrmStore = create<CrmStoreState>()(
             }
           })
           .catch((err) => console.error('Error updating lead status in Neon DB:', err));
+      },
+
+      reorderLeadsInColumn: (activeId, overId) => {
+        const { leads } = get();
+        const oldIndex = leads.findIndex((l) => l.id === activeId);
+        const newIndex = leads.findIndex((l) => l.id === overId);
+        if (oldIndex === -1 || newIndex === -1 || oldIndex === newIndex) return;
+
+        const newLeads = [...leads];
+        const [movedLead] = newLeads.splice(oldIndex, 1);
+        newLeads.splice(newIndex, 0, movedLead);
+
+        const updatedLeads = newLeads.map((l, idx) => ({ ...l, orderIndex: idx }));
+        set({ leads: updatedLeads });
       },
 
       addLeadNote: (leadId, content) => {

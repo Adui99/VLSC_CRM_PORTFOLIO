@@ -51,10 +51,44 @@ export async function POST(req: Request) {
       VALUES (${id}, ${action}, ${description}, ${performedBy}, ${createdAt});
     `;
 
+    // Auto-pruning: Ring buffer maintaining max 1,000 latest audit logs (Zero DB Bloat)
+    await sql`
+      DELETE FROM crm_audit_logs
+      WHERE id NOT IN (
+        SELECT id FROM crm_audit_logs ORDER BY created_at DESC LIMIT 1000
+      );
+    `;
+
     return NextResponse.json({ success: true });
   } catch (error: unknown) {
     const err = error as Error;
     console.error('Error inserting audit log:', err);
+    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
+  }
+}
+
+export async function DELETE(req: Request) {
+  try {
+    const authCheck = validateServerRole(req, ['super_admin']);
+    if (!authCheck.authorized) return authCheck.errorResponse!;
+
+    await ensureTable();
+
+    const { searchParams } = new URL(req.url);
+    const days = parseInt(searchParams.get('days') || '30', 10);
+
+    await sql`
+      DELETE FROM crm_audit_logs 
+      WHERE created_at < NOW() - (${days} || ' days')::INTERVAL;
+    `;
+
+    return NextResponse.json({ 
+      success: true, 
+      message: `Successfully purged audit logs older than ${days} days.` 
+    });
+  } catch (error: unknown) {
+    const err = error as Error;
+    console.error('Error clearing audit logs:', err);
     return NextResponse.json({ success: false, error: err.message }, { status: 500 });
   }
 }
