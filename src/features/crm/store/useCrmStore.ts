@@ -12,6 +12,7 @@ import {
   AuditAction,
   CrmNotification,
 } from '@/features/crm/types/crm';
+import { calculateLeadScore } from '@/features/crm/utils/calculateLeadScore';
 
 const INITIAL_STAFF: StaffUser[] = [
   {
@@ -200,7 +201,12 @@ export const useCrmStore = create<CrmStoreState>()(
           const permsData = await permsRes.json();
 
           if (leadsData.success && Array.isArray(leadsData.leads)) {
-            set({ leads: leadsData.leads });
+            const scoredLeads = leadsData.leads.map((l: Lead) => {
+              if (l.score !== undefined && l.scoreCategory) return l;
+              const calculated = calculateLeadScore(l);
+              return { ...l, score: calculated.score, scoreCategory: calculated.category };
+            });
+            set({ leads: scoredLeads });
           }
 
           if (staffData.success && Array.isArray(staffData.staffMembers) && staffData.staffMembers.length > 0) {
@@ -226,27 +232,56 @@ export const useCrmStore = create<CrmStoreState>()(
         const currentRole = get().testRole || current?.role || 'sales_rep';
         const tempId = `lead-${crypto.randomUUID()}`;
         const createdAt = new Date().toISOString();
+
+        // Calculate Lead Score automatically
+        const calculated = calculateLeadScore({
+          name: newLeadData.name,
+          email: newLeadData.email,
+          emailType: newLeadData.emailType,
+          phone: newLeadData.phone,
+          company: newLeadData.company,
+          companySize: newLeadData.companySize,
+          role: newLeadData.role,
+          services: newLeadData.services,
+          message: newLeadData.message,
+        });
+
         const newLead: Lead = {
           ...newLeadData,
           id: tempId,
+          score: calculated.score,
+          scoreCategory: calculated.category,
           createdAt,
           notes: [],
         };
         set((state) => ({ leads: [newLead, ...state.leads] }));
 
-        // F4: Push notification for new lead
+        // Notification (urgent for HOT lead)
         const notiId = `noti-${crypto.randomUUID()}`;
+        const isHot = calculated.category === 'hot';
+        const notiMessage = isHot
+          ? `🔥 HOT LEAD DETECTED [${calculated.score}/100]: ${newLeadData.name}${newLeadData.company ? ` (${newLeadData.company})` : ''}`
+          : `New lead received [${calculated.score}/100]: ${newLeadData.name}${newLeadData.company ? ` from ${newLeadData.company}` : ''}`;
+
         set((state) => ({
           notifications: [
             {
               id: notiId,
-              message: `New lead received: ${newLeadData.name}${newLeadData.company ? ` from ${newLeadData.company}` : ''}`,
+              message: notiMessage,
               leadId: tempId,
               timestamp: createdAt,
             },
             ...state.notifications,
           ],
         }));
+
+        // Audit Log for HOT Lead
+        if (isHot) {
+          get().addAuditLog(
+            'hot_lead_detected',
+            `🔥 HOT Lead Detected [Score: ${calculated.score}/100]: "${newLeadData.name}" (${newLeadData.email}) from ${newLeadData.source}`
+          );
+        }
 
         fetch('/api/crm/leads', {
           method: 'POST',
@@ -256,8 +291,18 @@ export const useCrmStore = create<CrmStoreState>()(
             'x-user-id': current?.id || '',
             'x-user-email': current?.email || '',
           },
-          body: JSON.stringify({ ...newLeadData, assignedTo: newLeadData.assignedTo || current?.id }),
-        }).catch((err) => console.error('Error saving lead to Neon DB:', err));
+          body: JSON.stringify({ ...newLead, id: tempId, assignedTo: newLead.assignedTo || current?.id }),
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.success && data.lead && data.lead.id && data.lead.id !== tempId) {
+              const serverId = data.lead.id;
+              set((state) => ({
+                leads: state.leads.map((l) => (l.id === tempId ? { ...l, id: serverId } : l)),
+              }));
+            }
+          })
+          .catch((err) => console.error('Error saving lead to Neon DB:', err));
       },
 
       updateLeadStatus: (id, status) => {

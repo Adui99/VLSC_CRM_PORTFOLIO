@@ -1,6 +1,6 @@
-﻿"use client";
+"use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useCrmStore } from "@/features/crm/store/useCrmStore";
 import { AuditAction } from "@/features/crm/types/crm";
 import {
@@ -9,7 +9,9 @@ import {
   UserPlus,
   UserMinus,
   ShieldCheck,
+  Flame,
   Spinner,
+  Funnel,
 } from "@phosphor-icons/react";
 
 const ACTION_CONFIG: Record<AuditAction, { label: string; icon: React.ReactNode; color: string }> = {
@@ -33,15 +35,34 @@ const ACTION_CONFIG: Record<AuditAction, { label: string; icon: React.ReactNode;
     icon: <ShieldCheck size={15} weight="bold" />,
     color: "bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-400",
   },
+  hot_lead_detected: {
+    label: "🔥 Hot Lead Detected",
+    icon: <Flame size={15} weight="bold" />,
+    color: "bg-red-500/15 border-red-500/40 text-red-600 dark:text-red-400 animate-pulse",
+  },
 };
+
+const FILTER_OPTIONS: { key: AuditAction | "all"; label: string }[] = [
+  { key: "all", label: "Tất cả (All)" },
+  { key: "lead_status_changed", label: "Status Changed" },
+  { key: "hot_lead_detected", label: "🔥 Hot Lead" },
+  { key: "user_added", label: "User Added" },
+  { key: "user_deleted", label: "User Removed" },
+  { key: "permissions_saved", label: "Permissions" },
+];
 
 export default function CrmAuditLog() {
   const { auditLogs, fetchAuditLogs, theme } = useCrmStore();
+  const [selectedFilter, setSelectedFilter] = useState<AuditAction | "all">("all");
   const isLight = theme === "light";
 
   useEffect(() => {
     fetchAuditLogs();
   }, [fetchAuditLogs]);
+
+  const filteredLogs = selectedFilter === "all"
+    ? auditLogs
+    : auditLogs.filter((log) => log.action === selectedFilter);
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -64,26 +85,58 @@ export default function CrmAuditLog() {
         </div>
       </div>
 
-      {/* Log Timeline */}
+      {/* Log Timeline with Status Filter */}
       <div className={`p-6 rounded-3xl border transition-colors ${
         isLight ? "bg-white border-slate-200 shadow-sm" : "bg-zinc-900 border-zinc-800"
       }`}>
-        <div className="flex items-center justify-between mb-5 pb-4 border-b border-slate-200 dark:border-zinc-800">
-          <h3 className={`text-sm font-extrabold uppercase tracking-wider ${isLight ? "text-slate-700" : "text-zinc-400"}`}>
-            Activity Timeline
-          </h3>
-          <span className={`text-xs font-bold px-2.5 py-1 rounded-xl ${
-            isLight ? "bg-slate-100 text-slate-600" : "bg-zinc-800 text-zinc-400"
-          }`}>
-            {auditLogs.length} records
-          </span>
+        {/* Timeline Header & Filter Bar */}
+        <div className="space-y-4 mb-6 pb-4 border-b border-slate-200 dark:border-zinc-800">
+          <div className="flex items-center justify-between">
+            <h3 className={`text-sm font-black uppercase tracking-wider ${isLight ? "text-slate-800" : "text-zinc-300"}`}>
+              Activity Timeline
+            </h3>
+            <span className={`text-xs font-bold px-2.5 py-1 rounded-xl ${
+              isLight ? "bg-slate-100 text-slate-700" : "bg-zinc-800 text-zinc-300"
+            }`}>
+              {filteredLogs.length} / {auditLogs.length} records
+            </span>
+          </div>
+
+          {/* Status Filter Pills Bar */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className={`text-xs font-bold flex items-center gap-1 mr-1 ${isLight ? "text-slate-500" : "text-zinc-400"}`}>
+              <Funnel size={14} weight="bold" /> Filter:
+            </span>
+            {FILTER_OPTIONS.map((opt) => {
+              const isActive = selectedFilter === opt.key;
+              const count = opt.key === "all"
+                ? auditLogs.length
+                : auditLogs.filter((l) => l.action === opt.key).length;
+
+              return (
+                <button
+                  key={opt.key}
+                  onClick={() => setSelectedFilter(opt.key)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-extrabold border transition-all cursor-pointer ${
+                    isActive
+                      ? "bg-amber-500 text-slate-950 border-amber-500 shadow-sm shadow-amber-500/20"
+                      : isLight
+                      ? "bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100"
+                      : "bg-zinc-950 border-zinc-800 text-zinc-300 hover:bg-zinc-850"
+                  }`}
+                >
+                  {opt.label} <span className="opacity-75 font-mono">({count})</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
 
-        {auditLogs.length === 0 ? (
+        {filteredLogs.length === 0 ? (
           <div className="py-16 flex flex-col items-center justify-center gap-3">
             <Spinner size={32} className={`animate-spin ${isLight ? "text-slate-300" : "text-zinc-600"}`} />
-            <p className={`text-sm font-semibold ${isLight ? "text-slate-400" : "text-zinc-500"}`}>
-              Loading audit records...
+            <p className={`text-sm font-semibold ${isLight ? "text-slate-500" : "text-zinc-400"}`}>
+              Không có nhật ký nào phù hợp với bộ lọc đã chọn.
             </p>
           </div>
         ) : (
@@ -92,10 +145,10 @@ export default function CrmAuditLog() {
             <div className={`absolute left-5 top-0 bottom-0 w-px ${isLight ? "bg-slate-200" : "bg-zinc-800"}`} />
 
             <div className="flex flex-col gap-0">
-              {auditLogs.map((log, idx) => {
+              {filteredLogs.map((log, idx) => {
                 const config = ACTION_CONFIG[log.action];
                 return (
-                  <div key={log.id} className={`relative flex gap-4 pb-6 ${idx === auditLogs.length - 1 ? "pb-0" : ""}`}>
+                  <div key={log.id} className={`relative flex gap-4 pb-6 ${idx === filteredLogs.length - 1 ? "pb-0" : ""}`}>
                     {/* Timeline dot with icon */}
                     <div className={`relative z-10 flex-shrink-0 w-10 h-10 rounded-full border-2 flex items-center justify-center ${config.color}`}>
                       {config.icon}
@@ -114,7 +167,7 @@ export default function CrmAuditLog() {
                             by {log.performedBy}
                           </span>
                         </div>
-                        <span className={`text-[10px] font-semibold tabular-nums ${isLight ? "text-slate-400" : "text-zinc-500"}`}>
+                        <span className={`text-[10px] font-semibold tabular-nums ${isLight ? "text-slate-500" : "text-zinc-400"}`}>
                           {new Date(log.createdAt).toLocaleString()}
                         </span>
                       </div>
@@ -132,3 +185,4 @@ export default function CrmAuditLog() {
     </div>
   );
 }
+

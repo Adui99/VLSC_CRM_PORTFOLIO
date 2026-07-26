@@ -12,6 +12,7 @@ import {
   Eye, 
   PlusCircle,
   FunnelX,
+  X,
 } from "@phosphor-icons/react";
 import { motion } from "framer-motion";
 import {
@@ -27,6 +28,7 @@ import {
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import CrmLeadDetailModal from "./CrmLeadDetailModal";
+import { isCorporateEmail } from "@/features/crm/utils/calculateLeadScore";
 
 export default function CrmLeadManager() {
   const { leads, theme, deleteLead, permissions, currentUser, addLead, inspectingLead, setInspectingLead, updateLeadStatus } = useCrmStore();
@@ -42,12 +44,70 @@ export default function CrmLeadManager() {
   const [newLeadForm, setNewLeadForm] = useState({
     name: "",
     email: "",
+    emailType: "company" as "company" | "personal",
     phone: "",
     company: "",
+    companySize: "1-10",
+    role: "Staff",
+    services: [] as string[],
     dealValue: 10000,
     source: "Manual Staff Entry",
     message: ""
   });
+
+  const WORK_SERVICES_OPTIONS = [
+    "Thiết kế Website & WebGL",
+    "Thiết kế Landing Page",
+    "Redesign & Tối ưu UI/UX",
+    "Bảo trì & Nâng cấp Hệ thống",
+    "Tích hợp CRM & Automation",
+  ];
+
+  const toggleManualService = (service: string) => {
+    setNewLeadForm((prev) => {
+      const exists = prev.services.includes(service);
+      const newServices = exists
+        ? prev.services.filter((s) => s !== service)
+        : [...prev.services, service];
+      return { ...prev, services: newServices };
+    });
+  };
+
+  const isManualCorp = isCorporateEmail(newLeadForm.email);
+
+  const handleManualAddLead = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newLeadForm.name || !newLeadForm.email) return;
+
+    addLead({
+      name: newLeadForm.name,
+      email: newLeadForm.email,
+      emailType: isManualCorp ? "company" : "personal",
+      phone: newLeadForm.phone,
+      company: newLeadForm.company,
+      companySize: newLeadForm.companySize,
+      role: newLeadForm.role,
+      services: newLeadForm.services,
+      dealValue: Number(newLeadForm.dealValue) || 10000,
+      source: newLeadForm.source,
+      message: newLeadForm.message,
+      status: 'new'
+    });
+    setShowAddLeadModal(false);
+    setNewLeadForm({
+      name: "",
+      email: "",
+      emailType: "company",
+      phone: "",
+      company: "",
+      companySize: "1-10",
+      role: "Staff",
+      services: [],
+      dealValue: 10000,
+      source: "Manual Staff Entry",
+      message: ""
+    });
+  };
 
   const isLight = theme === "light";
   const currentRole = currentUser?.role || 'sales_rep';
@@ -89,23 +149,6 @@ export default function CrmLeadManager() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-  };
-
-  const handleManualAddLead = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newLeadForm.name || !newLeadForm.email) return;
-    addLead({
-      name: newLeadForm.name,
-      email: newLeadForm.email,
-      phone: newLeadForm.phone,
-      company: newLeadForm.company,
-      dealValue: Number(newLeadForm.dealValue) || 5000,
-      source: newLeadForm.source,
-      message: newLeadForm.message,
-      status: 'new'
-    });
-    setShowAddLeadModal(false);
-    setNewLeadForm({ name: "", email: "", phone: "", company: "", dealValue: 10000, source: "Manual Staff Entry", message: "" });
   };
 
   const statusBadgeStyle: Record<LeadStatus, string> = {
@@ -292,6 +335,7 @@ export default function CrmLeadManager() {
                   isLight ? "bg-slate-50 border-slate-200/80 text-slate-700" : "bg-zinc-950/60 border-zinc-800 text-zinc-400"
                 }`}>
                   <th className="py-3.5 px-4">Contact & Company</th>
+                  <th className="py-3.5 px-4">Score & Fit</th>
                   <th className="py-3.5 px-4">Status</th>
                   <th className="py-3.5 px-4">Deal Value</th>
                   <th className="py-3.5 px-4">Source</th>
@@ -343,6 +387,26 @@ export default function CrmLeadManager() {
                           <span>{lead.email}</span>
                           {lead.company && <span className="font-extrabold">• {lead.company}</span>}
                         </div>
+                      </td>
+
+                      {/* Score & Fit Badge */}
+                      <td className="py-4 px-4">
+                        {lead.score !== undefined ? (
+                          <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-black tracking-tight border ${
+                            lead.scoreCategory === 'hot'
+                              ? "bg-gradient-to-r from-red-500/20 to-amber-500/20 text-red-600 dark:text-red-400 border-red-500/40 animate-pulse"
+                              : lead.scoreCategory === 'warm'
+                              ? "bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30"
+                              : "bg-slate-500/10 text-slate-600 dark:text-zinc-400 border-slate-500/20"
+                          }`}>
+                            {lead.scoreCategory === 'hot' && "🔥 "}
+                            {lead.scoreCategory === 'warm' && "☀️ "}
+                            {lead.scoreCategory === 'cold' && "❄️ "}
+                            {lead.score}/100 | {lead.scoreCategory?.toUpperCase()}
+                          </span>
+                        ) : (
+                          <span className="text-xs text-slate-400 font-medium">N/A</span>
+                        )}
                       </td>
 
                       {/* Status */}
@@ -462,79 +526,253 @@ export default function CrmLeadManager() {
         />
       )}
 
-      {/* Add Lead Modal */}
+      {/* Add Lead Modal (Rich 2-Column Form for Auto-Scoring) */}
       {showAddLeadModal && (
         <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 ${
-          isLight ? "bg-slate-900/60 backdrop-blur-md" : "bg-black/80 backdrop-blur-md"
+          isLight ? "bg-slate-950/80" : "bg-black/90"
         }`}>
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className={`w-full max-w-md rounded-3xl p-6 shadow-2xl border ${
-              isLight ? "bg-white border-slate-200 text-slate-900" : "bg-zinc-900 border-zinc-800 text-zinc-50"
+            className={`w-full max-w-2xl max-h-[90vh] overflow-y-auto no-scrollbar rounded-3xl p-6 sm:p-8 shadow-2xl border ${
+              isLight ? "bg-white border-slate-200 text-slate-950" : "bg-zinc-900 border-zinc-800 text-zinc-50"
             }`}
           >
-            <h3 className="text-xl font-extrabold tracking-tight mb-4">Add Manual Lead</h3>
-            <form onSubmit={handleManualAddLead} className="space-y-3.5">
+            <div className="flex items-center justify-between mb-6 pb-3 border-b border-slate-200 dark:border-zinc-800">
               <div>
-                <label className="text-sm font-bold text-slate-800 dark:text-zinc-200">Contact Name</label>
-                <input
-                  required
-                  type="text"
-                  value={newLeadForm.name}
-                  onChange={(e) => setNewLeadForm({ ...newLeadForm, name: e.target.value })}
-                  className={`w-full p-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500 mt-1 ${
-                    isLight ? "bg-white border-slate-300 text-slate-900 font-medium" : "bg-zinc-950 border-zinc-700 text-zinc-100"
+                <h3 className={`text-xl font-black tracking-tight ${isLight ? "text-slate-950" : "text-zinc-50"}`}>
+                  Thêm Lead Mới (Manual Add)
+                </h3>
+                <p className={`text-xs font-bold mt-0.5 ${isLight ? "text-slate-700" : "text-zinc-300"}`}>
+                  Nhập đầy đủ thông tin để hệ thống CRM tự động chấm điểm Lead (Auto-scoring 100đ).
+                </p>
+              </div>
+              <button
+                onClick={() => setShowAddLeadModal(false)}
+                className="p-2 rounded-xl text-slate-500 hover:text-slate-800 dark:hover:text-zinc-200 hover:bg-slate-100 dark:hover:bg-zinc-800 cursor-pointer"
+              >
+                <X size={20} weight="bold" />
+              </button>
+            </div>
+
+            <form onSubmit={handleManualAddLead} className="space-y-4">
+              {/* Row 1: Name & Phone */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className={`text-xs font-black uppercase tracking-wide ${isLight ? "text-slate-900" : "text-zinc-100"}`}>
+                    Contact Name <span className="text-red-500 font-bold">*</span>
+                  </label>
+                  <input
+                    required
+                    type="text"
+                    placeholder="Nguyen Van A"
+                    value={newLeadForm.name}
+                    onChange={(e) => setNewLeadForm({ ...newLeadForm, name: e.target.value })}
+                    className={`w-full p-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500 mt-1 ${
+                      isLight ? "bg-white border-slate-300 text-slate-950 font-bold placeholder-slate-400" : "bg-zinc-950 border-zinc-700 text-zinc-100 font-bold placeholder-zinc-500"
+                    }`}
+                  />
+                </div>
+
+                <div>
+                  <label className={`text-xs font-black uppercase tracking-wide ${isLight ? "text-slate-900" : "text-zinc-100"}`}>
+                    Phone Number / Zalo
+                  </label>
+                  <input
+                    type="tel"
+                    placeholder="0987654321"
+                    value={newLeadForm.phone}
+                    onChange={(e) => setNewLeadForm({ ...newLeadForm, phone: e.target.value })}
+                    className={`w-full p-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500 mt-1 ${
+                      isLight ? "bg-white border-slate-300 text-slate-950 font-bold placeholder-slate-400" : "bg-zinc-950 border-zinc-700 text-zinc-100 font-bold placeholder-zinc-500"
+                    }`}
+                  />
+                </div>
+              </div>
+
+              {/* Row 2: Email & Corporate Email Badge Only */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <div className="flex items-center justify-between">
+                    <label className={`text-xs font-black uppercase tracking-wide ${isLight ? "text-slate-900" : "text-zinc-100"}`}>
+                      Email Address <span className="text-red-500 font-bold">*</span>
+                    </label>
+                    {/* Render ONLY corporate email badge */}
+                    {isManualCorp && (
+                      <span className="px-2 py-0.5 rounded text-[10px] font-black flex items-center gap-1 bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/40">
+                        🏢 Email Công ty
+                      </span>
+                    )}
+                  </div>
+                  <input
+                    required
+                    type="email"
+                    placeholder={isManualCorp ? "name@company.com" : "name@gmail.com"}
+                    value={newLeadForm.email}
+                    onChange={(e) => setNewLeadForm({ ...newLeadForm, email: e.target.value })}
+                    className={`w-full p-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500 mt-1 ${
+                      isLight ? "bg-white border-slate-300 text-slate-950 font-bold placeholder-slate-400" : "bg-zinc-950 border-zinc-700 text-zinc-100 font-bold placeholder-zinc-500"
+                    }`}
+                  />
+                </div>
+
+                <div>
+                  <label className={`text-xs font-black uppercase tracking-wide ${isLight ? "text-slate-900" : "text-zinc-100"}`}>
+                    Company Name
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Acme Corporation"
+                    value={newLeadForm.company}
+                    onChange={(e) => setNewLeadForm({ ...newLeadForm, company: e.target.value })}
+                    className={`w-full p-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500 mt-1 ${
+                      isLight ? "bg-white border-slate-300 text-slate-950 font-bold placeholder-slate-400" : "bg-zinc-950 border-zinc-700 text-zinc-100 font-bold placeholder-zinc-500"
+                    }`}
+                  />
+                </div>
+              </div>
+
+              {/* Row 3: Role & Company Size */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className={`text-xs font-black uppercase tracking-wide ${isLight ? "text-slate-900" : "text-zinc-100"}`}>
+                    Role / Chức vụ
+                  </label>
+                  <select
+                    value={newLeadForm.role}
+                    onChange={(e) => setNewLeadForm({ ...newLeadForm, role: e.target.value })}
+                    className={`w-full p-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500 mt-1 cursor-pointer font-bold ${
+                      isLight ? "bg-white border-slate-300 text-slate-950" : "bg-zinc-950 border-zinc-700 text-zinc-100"
+                    }`}
+                  >
+                    <option value="CEO/Director">CEO / Founder / Giám đốc</option>
+                    <option value="Manager">Manager / Trưởng phòng</option>
+                    <option value="Staff">Nhân viên / Khác</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className={`text-xs font-black uppercase tracking-wide ${isLight ? "text-slate-900" : "text-zinc-100"}`}>
+                    Quy mô Doanh nghiệp
+                  </label>
+                  <select
+                    value={newLeadForm.companySize}
+                    onChange={(e) => setNewLeadForm({ ...newLeadForm, companySize: e.target.value })}
+                    className={`w-full p-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500 mt-1 cursor-pointer font-bold ${
+                      isLight ? "bg-white border-slate-300 text-slate-950" : "bg-zinc-950 border-zinc-700 text-zinc-100"
+                    }`}
+                  >
+                    <option value="1-10">1 - 10 nhân sự</option>
+                    <option value="11-50">11 - 50 nhân sự</option>
+                    <option value="50+">Trên 50 nhân sự</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Row 4: Deal Value & Source */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className={`text-xs font-black uppercase tracking-wide ${isLight ? "text-slate-900" : "text-zinc-100"}`}>
+                    Deal Value ($)
+                  </label>
+                  <input
+                    type="number"
+                    value={newLeadForm.dealValue}
+                    onChange={(e) => setNewLeadForm({ ...newLeadForm, dealValue: Number(e.target.value) })}
+                    className={`w-full p-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500 mt-1 ${
+                      isLight ? "bg-white border-slate-300 text-slate-950 font-bold placeholder-slate-400" : "bg-zinc-950 border-zinc-700 text-zinc-100 font-bold placeholder-zinc-500"
+                    }`}
+                  />
+                </div>
+
+                <div>
+                  <label className={`text-xs font-black uppercase tracking-wide ${isLight ? "text-slate-900" : "text-zinc-100"}`}>
+                    Lead Source
+                  </label>
+                  <select
+                    value={newLeadForm.source}
+                    onChange={(e) => setNewLeadForm({ ...newLeadForm, source: e.target.value })}
+                    className={`w-full p-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500 mt-1 cursor-pointer font-bold ${
+                      isLight ? "bg-white border-slate-300 text-slate-950" : "bg-zinc-950 border-zinc-700 text-zinc-100"
+                    }`}
+                  >
+                    <option value="Manual Staff Entry">Manual Staff Entry (Sales nhập thủ công)</option>
+                    <option value="Website Contact Form">Website Contact Form (Form liên hệ Web)</option>
+                    <option value="Landing Page Modal">Landing Page Modal (Đăng ký Landing Page)</option>
+                    <option value="Cold Email Outreach">Cold Email Outreach (Email tiếp thị B2B)</option>
+                    <option value="Referral / Giới thiệu">Referral / Giới thiệu (Đối tác giới thiệu)</option>
+                    <option value="Social Media (LinkedIn/Facebook)">Social Media (LinkedIn / Facebook)</option>
+                    <option value="Event / Hội thảo">Event / Hội thảo (Sự kiện doanh nghiệp)</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Row 5: Services Interested In */}
+              <div>
+                <label className={`text-xs font-black uppercase tracking-wide ${isLight ? "text-slate-900" : "text-zinc-100"}`}>
+                  Dịch vụ quan tâm <span className={`font-semibold normal-case ${isLight ? "text-slate-600" : "text-zinc-400"}`}>(Multi-select)</span>
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1.5">
+                  {WORK_SERVICES_OPTIONS.map((service) => {
+                    const isChecked = newLeadForm.services.includes(service);
+                    return (
+                      <label
+                        key={service}
+                        onClick={() => toggleManualService(service)}
+                        className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-bold transition-all cursor-pointer select-none ${
+                          isChecked
+                            ? "bg-amber-500/15 border-amber-500/60 text-amber-700 dark:text-amber-300 font-extrabold"
+                            : isLight
+                            ? "bg-slate-50 border-slate-300 text-slate-800 hover:border-slate-400"
+                            : "bg-zinc-950 border-zinc-800 text-zinc-300 hover:border-zinc-700"
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => {}}
+                          className="accent-amber-500 rounded cursor-pointer"
+                        />
+                        <span>{service}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Row 6: Message / Internal Notes */}
+              <div>
+                <label className={`text-xs font-black uppercase tracking-wide ${isLight ? "text-slate-900" : "text-zinc-100"}`}>
+                  Message / Internal Notes
+                </label>
+                <textarea
+                  rows={2}
+                  placeholder="Ghi chú nhu cầu hoặc trao đổi ban đầu..."
+                  value={newLeadForm.message}
+                  onChange={(e) => setNewLeadForm({ ...newLeadForm, message: e.target.value })}
+                  className={`w-full p-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500 mt-1 resize-none ${
+                    isLight ? "bg-white border-slate-300 text-slate-950 font-bold placeholder-slate-400" : "bg-zinc-950 border-zinc-700 text-zinc-100 font-bold placeholder-zinc-500"
                   }`}
                 />
               </div>
-              <div>
-                <label className="text-sm font-bold text-slate-800 dark:text-zinc-200">Email Address</label>
-                <input
-                  required
-                  type="email"
-                  value={newLeadForm.email}
-                  onChange={(e) => setNewLeadForm({ ...newLeadForm, email: e.target.value })}
-                  className={`w-full p-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500 mt-1 ${
-                    isLight ? "bg-white border-slate-300 text-slate-900 font-medium" : "bg-zinc-950 border-zinc-700 text-zinc-100"
-                  }`}
-                />
-              </div>
-              <div>
-                <label className="text-sm font-bold text-slate-800 dark:text-zinc-200">Company</label>
-                <input
-                  type="text"
-                  value={newLeadForm.company}
-                  onChange={(e) => setNewLeadForm({ ...newLeadForm, company: e.target.value })}
-                  className={`w-full p-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500 mt-1 ${
-                    isLight ? "bg-white border-slate-300 text-slate-900 font-medium" : "bg-zinc-950 border-zinc-700 text-zinc-100"
-                  }`}
-                />
-              </div>
-              <div>
-                <label className="text-sm font-bold text-slate-800 dark:text-zinc-200">Deal Value ($)</label>
-                <input
-                  type="number"
-                  value={newLeadForm.dealValue}
-                  onChange={(e) => setNewLeadForm({ ...newLeadForm, dealValue: Number(e.target.value) })}
-                  className={`w-full p-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500 mt-1 ${
-                    isLight ? "bg-white border-slate-300 text-slate-900 font-medium" : "bg-zinc-950 border-zinc-700 text-zinc-100"
-                  }`}
-                />
-              </div>
-              <div className="flex justify-end gap-2.5 pt-4">
+
+              <div className="flex justify-end gap-2.5 pt-4 border-t border-slate-200 dark:border-zinc-800">
                 <button
                   type="button"
                   onClick={() => setShowAddLeadModal(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-bold border border-slate-300 dark:border-zinc-700 hover:bg-slate-100 dark:hover:bg-zinc-800 cursor-pointer transition-colors"
+                  className={`px-4 py-2.5 rounded-xl text-xs font-bold border transition-colors cursor-pointer ${
+                    isLight
+                      ? "border-slate-300 text-slate-800 hover:bg-slate-100"
+                      : "border-zinc-700 text-zinc-200 hover:bg-zinc-800"
+                  }`}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 rounded-xl text-xs font-extrabold bg-amber-500 text-slate-950 hover:bg-amber-600 cursor-pointer transition-all shadow-md shadow-amber-500/20 active:scale-[0.98]"
+                  className="px-5 py-2.5 rounded-xl text-xs font-black bg-amber-500 text-slate-950 hover:bg-amber-400 cursor-pointer transition-all shadow-md shadow-amber-500/20 active:scale-[0.98]"
                 >
-                  Save Lead
+                  Lưu & Auto-Score Lead
                 </button>
               </div>
             </form>
@@ -545,7 +783,7 @@ export default function CrmLeadManager() {
       {/* Confirm Close Lead Modal */}
       {pendingClosedDrag && (
         <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 ${
-          isLight ? "bg-slate-900/60 backdrop-blur-md" : "bg-black/80 backdrop-blur-md"
+          isLight ? "bg-slate-950/80" : "bg-black/90"
         }`}>
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
@@ -710,12 +948,28 @@ function KanbanCard({ lead, isLight, onClick, isDraggable = true }: KanbanCardPr
           : "bg-zinc-900/90 border-zinc-800/90 hover:border-amber-500/50"
       }`}
     >
-      {/* Name row */}
-      <div
-        className={`font-extrabold text-sm mb-1 cursor-pointer ${isLight ? "text-slate-900" : "text-zinc-50"}`}
-        onClick={(e) => { e.stopPropagation(); onClick(lead); }}
-      >
-        {lead.name}
+      {/* Name & Score Badge row */}
+      <div className="flex items-center justify-between gap-1.5 mb-1">
+        <div
+          className={`font-extrabold text-sm cursor-pointer truncate ${isLight ? "text-slate-900" : "text-zinc-50"}`}
+          onClick={(e) => { e.stopPropagation(); onClick(lead); }}
+        >
+          {lead.name}
+        </div>
+        {lead.score !== undefined && (
+          <span className={`inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-black tracking-tight border shrink-0 ${
+            lead.scoreCategory === 'hot'
+              ? "bg-red-500/15 text-red-600 dark:text-red-400 border-red-500/30 animate-pulse"
+              : lead.scoreCategory === 'warm'
+              ? "bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30"
+              : "bg-slate-500/10 text-slate-600 dark:text-zinc-400 border-slate-500/20"
+          }`}>
+            {lead.scoreCategory === 'hot' && "🔥 "}
+            {lead.scoreCategory === 'warm' && "☀️ "}
+            {lead.scoreCategory === 'cold' && "❄️ "}
+            {lead.score}
+          </span>
+        )}
       </div>
 
       <div

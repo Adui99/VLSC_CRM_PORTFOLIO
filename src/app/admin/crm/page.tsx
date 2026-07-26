@@ -10,11 +10,12 @@ import CrmRbacManager from "@/features/crm/components/CrmRbacManager";
 import CrmUserSettings from "@/features/crm/components/CrmUserSettings";
 import CrmLoginModal from "@/features/crm/components/CrmLoginModal";
 import CrmAuditLog from "@/features/crm/components/CrmAuditLog";
+import CrmExecutiveAnalytics from "@/features/crm/components/CrmExecutiveAnalytics";
 import { ShieldWarning } from "@phosphor-icons/react";
 
 export default function CrmAdminPage() {
   const { theme, isAuthenticated, currentUser, testRole, permissions, fetchDataFromDb } = useCrmStore();
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'rbac' | 'settings' | 'audit'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'analytics' | 'rbac' | 'settings' | 'audit'>('dashboard');
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
 
@@ -50,7 +51,7 @@ export default function CrmAdminPage() {
           {mobileSidebarOpen && (
             <div className="lg:hidden fixed inset-0 z-50 flex">
               <div 
-                className="fixed inset-0 bg-black/60 backdrop-blur-sm"
+                className="fixed inset-0 bg-black/75 transition-opacity"
                 onClick={() => setMobileSidebarOpen(false)}
               />
               <div className="relative z-10 w-4/5 max-w-xs h-full bg-white dark:bg-zinc-900">
@@ -89,6 +90,20 @@ export default function CrmAdminPage() {
                     <h3 className="text-xl font-bold">Access Restricted</h3>
                     <p className="text-sm text-slate-500 dark:text-zinc-400">
                       Your role ({currentRole}) does not have permission to view lead dashboard data.
+                    </p>
+                  </div>
+                )
+              ) : activeTab === 'analytics' ? (
+                currentRole === 'super_admin' ? (
+                  <CrmExecutiveAnalytics />
+                ) : (
+                  <div className={`p-12 text-center rounded-3xl border ${
+                    isLight ? "bg-white border-slate-200" : "bg-zinc-900 border-zinc-800"
+                  }`}>
+                    <ShieldWarning size={48} className="mx-auto text-amber-500 mb-3" />
+                    <h3 className="text-xl font-bold">Super Admin Access Only</h3>
+                    <p className="text-sm text-slate-500 dark:text-zinc-400 mt-2">
+                      Executive Analytics & Financial Dashboards are reserved exclusively for Super Admin.
                     </p>
                   </div>
                 )

@@ -7,16 +7,25 @@ export interface LeadNote {
   createdAt: string;
 }
 
+export type ScoreCategory = 'hot' | 'warm' | 'cold';
+export type EmailType = 'company' | 'personal';
+
 export interface Lead {
   id: string;
   name: string;
   email: string;
+  emailType?: EmailType;
   phone?: string;
   company?: string;
+  companySize?: string;
+  role?: string;
+  services?: string[];
   status: LeadStatus;
   dealValue: number;
   source: string;
   message?: string;
+  score?: number;
+  scoreCategory?: ScoreCategory;
   createdAt: string;
   assignedTo?: string;
   notes: LeadNote[];
@@ -49,7 +58,7 @@ export type PermissionMatrix = Record<UserRole, RolePermission>;
 
 export type ThemeMode = 'light' | 'dark';
 
-export type AuditAction = 'lead_status_changed' | 'user_added' | 'user_deleted' | 'permissions_saved';
+export type AuditAction = 'lead_status_changed' | 'user_added' | 'user_deleted' | 'permissions_saved' | 'hot_lead_detected';
 
 export interface AuditLog {
   id: string;
@@ -65,3 +74,4 @@ export interface CrmNotification {
   leadId: string;
   timestamp: string;
 }
+

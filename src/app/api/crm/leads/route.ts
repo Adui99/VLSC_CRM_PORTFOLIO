@@ -75,10 +75,10 @@ export async function POST(req: Request) {
     if (!authCheck.authorized) return authCheck.errorResponse!;
 
     const body = await req.json();
-    const { name, email, phone, company, status, dealValue, source, message, assignedTo } = body;
+    const { id: incomingId, name, email, phone, company, status, dealValue, source, message, assignedTo } = body;
 
     const validatedDealValue = Math.max(0, Number(dealValue) || 0);
-    const id = `lead-${crypto.randomUUID()}`;
+    const id = incomingId || `lead-${crypto.randomUUID()}`;
     const createdAt = new Date().toISOString();
 
     await sql`

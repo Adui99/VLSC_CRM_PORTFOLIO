@@ -36,17 +36,34 @@ html.lenis, html.lenis body {
   pointer-events: none;
 }
 
-/* Custom Scrollbar for a premium feel */
+/* Hide scrollbar globally for clean UI */
 ::-webkit-scrollbar {
-  width: 8px;
+  display: none;
+  width: 0px;
+  background: transparent;
 }
-::-webkit-scrollbar-track {
-  background: #09090b; /* zinc-950 */
+
+html, body, div, select, textarea {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
-::-webkit-scrollbar-thumb {
-  background: #27272a; /* zinc-800 */
-  border-radius: 4px;
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
 }
-::-webkit-scrollbar-thumb:hover {
-  background: #f59e0b; /* amber-500 */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
+
+/* Eliminate default browser black focus rings on buttons */
+button:focus,
+button:focus-visible,
+a:focus,
+a:focus-visible,
+[role="button"]:focus,
+[role="button"]:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+

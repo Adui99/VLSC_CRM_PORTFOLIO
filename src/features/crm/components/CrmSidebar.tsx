@@ -7,12 +7,13 @@ import {
   Gear,
   Sparkle,
   ClockCounterClockwise,
+  ChartBar,
 } from "@phosphor-icons/react";
 import { motion } from "framer-motion";
 
 interface CrmSidebarProps {
-  activeTab: 'dashboard' | 'rbac' | 'settings' | 'audit';
-  setActiveTab: (tab: 'dashboard' | 'rbac' | 'settings' | 'audit') => void;
+  activeTab: 'dashboard' | 'analytics' | 'rbac' | 'settings' | 'audit';
+  setActiveTab: (tab: 'dashboard' | 'analytics' | 'rbac' | 'settings' | 'audit') => void;
   isOpenMobile?: boolean;
   setIsOpenMobile?: (open: boolean) => void;
 }
@@ -40,10 +41,10 @@ export default function CrmSidebar({ activeTab, setActiveTab, setIsOpenMobile }:
   };
 
   return (
-    <aside className={`w-full lg:w-72 xl:w-80 border-r flex flex-col shrink-0 transition-colors duration-200 ${
+    <aside className={`w-full lg:w-72 xl:w-80 border-r flex flex-col shrink-0 transition-colors duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
       isLight 
-        ? "bg-white/95 backdrop-blur-md border-slate-200/80 text-slate-900" 
-        : "bg-zinc-900/95 backdrop-blur-md border-zinc-800/80 text-zinc-100"
+        ? "bg-white border-slate-200/80 text-slate-900" 
+        : "bg-zinc-900 border-zinc-800/80 text-zinc-100"
     }`}>
       {/* Sidebar Header / Brand Logo */}
       <div className="p-6 border-b border-slate-200/80 dark:border-zinc-800 flex items-center justify-between">
@@ -77,7 +78,7 @@ export default function CrmSidebar({ activeTab, setActiveTab, setIsOpenMobile }:
           </span>
           <nav className="mt-2 space-y-1.5">
             
-            {/* Dashboard Button */}
+            {/* Lead Dashboard Button (Shared Workspace) */}
             <motion.button
               whileHover={{ x: 3 }}
               whileTap={{ scale: 0.98 }}
@@ -85,7 +86,7 @@ export default function CrmSidebar({ activeTab, setActiveTab, setIsOpenMobile }:
                 setActiveTab('dashboard');
                 if (setIsOpenMobile) setIsOpenMobile(false);
               }}
-              className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-sm font-extrabold transition-all duration-200 cursor-pointer ${
+              className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-sm font-extrabold transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] cursor-pointer outline-none focus:outline-none focus-visible:outline-none select-none ${
                 activeTab === 'dashboard'
                   ? "bg-amber-500 text-slate-950 shadow-md shadow-amber-500/25"
                   : isLight
@@ -106,6 +107,33 @@ export default function CrmSidebar({ activeTab, setActiveTab, setIsOpenMobile }:
               </span>
             </motion.button>
 
+            {/* Executive Analytics (Visible ONLY for Super Admin) */}
+            {isSuperAdmin && (
+              <motion.button
+                whileHover={{ x: 3 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => {
+                  setActiveTab('analytics');
+                  if (setIsOpenMobile) setIsOpenMobile(false);
+                }}
+                className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-sm font-extrabold transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] cursor-pointer outline-none focus:outline-none focus-visible:outline-none select-none ${
+                  activeTab === 'analytics'
+                    ? "bg-amber-500 text-slate-950 shadow-md shadow-amber-500/25"
+                    : isLight
+                    ? "text-slate-800 hover:bg-slate-100 hover:text-slate-950"
+                    : "text-zinc-300 hover:bg-zinc-800 hover:text-zinc-50"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <ChartBar size={20} weight={activeTab === 'analytics' ? "bold" : "regular"} />
+                  <span>Executive Analytics</span>
+                </div>
+                <span className="text-[10px] font-black uppercase px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-800 dark:text-amber-300">
+                  Super Admin
+                </span>
+              </motion.button>
+            )}
+
             {/* Team & RBAC (Visible for Super Admin and Manager) */}
             {canAccessStaff && (
               <motion.button
@@ -115,7 +143,7 @@ export default function CrmSidebar({ activeTab, setActiveTab, setIsOpenMobile }:
                   setActiveTab('rbac');
                   if (setIsOpenMobile) setIsOpenMobile(false);
                 }}
-                className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-sm font-extrabold transition-all duration-200 cursor-pointer ${
+                className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-sm font-extrabold transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] cursor-pointer outline-none focus:outline-none focus-visible:outline-none select-none ${
                   activeTab === 'rbac'
                     ? "bg-amber-500 text-slate-950 shadow-md shadow-amber-500/25"
                     : isLight
@@ -146,7 +174,7 @@ export default function CrmSidebar({ activeTab, setActiveTab, setIsOpenMobile }:
                   setActiveTab('audit');
                   if (setIsOpenMobile) setIsOpenMobile(false);
                 }}
-                className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-sm font-extrabold transition-all duration-200 cursor-pointer ${
+                className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-sm font-extrabold transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] cursor-pointer outline-none focus:outline-none focus-visible:outline-none select-none ${
                   activeTab === 'audit'
                     ? "bg-amber-500 text-slate-950 shadow-md shadow-amber-500/25"
                     : isLight
@@ -169,7 +197,7 @@ export default function CrmSidebar({ activeTab, setActiveTab, setIsOpenMobile }:
                 setActiveTab('settings');
                 if (setIsOpenMobile) setIsOpenMobile(false);
               }}
-              className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-sm font-extrabold transition-all duration-200 cursor-pointer ${
+              className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-sm font-extrabold transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] cursor-pointer outline-none focus:outline-none focus-visible:outline-none select-none ${
                 activeTab === 'settings'
                   ? "bg-amber-500 text-slate-950 shadow-md shadow-amber-500/25"
                   : isLight
@@ -191,7 +219,7 @@ export default function CrmSidebar({ activeTab, setActiveTab, setIsOpenMobile }:
           whileHover={{ y: -2, scale: 1.01 }}
           whileTap={{ scale: 0.98 }}
           onClick={handleInspectNewLead}
-          className={`w-full text-left p-4 rounded-2xl border transition-all duration-200 cursor-pointer ${
+          className={`w-full text-left p-4 rounded-2xl border transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] cursor-pointer ${
             isLight 
               ? "bg-gradient-to-br from-amber-500/5 to-amber-500/10 border-amber-500/30 shadow-sm hover:shadow-md hover:border-amber-500/60" 
               : "bg-gradient-to-br from-amber-500/15 to-amber-500/5 border-amber-500/30 hover:border-amber-500/60"

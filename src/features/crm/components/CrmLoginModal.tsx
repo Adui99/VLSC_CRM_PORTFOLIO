@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import { useCrmStore } from "@/features/crm/store/useCrmStore";
@@ -22,8 +22,8 @@ export default function CrmLoginModal() {
   };
 
   return (
-    <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 ${
-      isLight ? "bg-slate-950/70 backdrop-blur-md" : "bg-black/80 backdrop-blur-md"
+    <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+      isLight ? "bg-slate-950/85" : "bg-black/90"
     }`}>
       <div className={`w-full max-w-md rounded-3xl p-8 shadow-2xl border transition-all ${
         isLight 

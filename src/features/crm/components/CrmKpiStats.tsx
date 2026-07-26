@@ -1,7 +1,7 @@
 "use client";
 
 import { useCrmStore } from "@/features/crm/store/useCrmStore";
-import { Users, CurrencyDollar, TrendUp, Sparkle, Target, Compass } from "@phosphor-icons/react";
+import { Users, CurrencyDollar, TrendUp, Sparkle, Target, Compass, Fire, ChartPieSlice, SquaresFour, SunDim, Snowflake } from "@phosphor-icons/react";
 import { motion } from "framer-motion";
 
 export default function CrmKpiStats() {
@@ -35,23 +35,82 @@ export default function CrmKpiStats() {
 
   const avgDealSize = totalLeads > 0 ? Math.round(totalDealValue / totalLeads) : 0;
 
-  const cardStyle = `p-6 rounded-2xl border transition-all duration-200 ${
+  // ----------------------------------------------------
+  // DASHBOARD 3: Lead Score Category Distribution Math
+  // ----------------------------------------------------
+  const hotLeads = leads.filter((l) => l.scoreCategory === "hot" || (l.score !== undefined && l.score >= 80));
+  const warmLeads = leads.filter((l) => l.scoreCategory === "warm" || (l.score !== undefined && l.score >= 50 && l.score < 80));
+  const coldLeads = leads.filter((l) => l.scoreCategory === "cold" || (l.score !== undefined && l.score < 50));
+
+  const hotCount = hotLeads.length;
+  const warmCount = warmLeads.length;
+  const coldCount = coldLeads.length;
+
+  const hotValue = hotLeads.reduce((sum, l) => sum + (l.dealValue || 0), 0);
+  const warmValue = warmLeads.reduce((sum, l) => sum + (l.dealValue || 0), 0);
+  const coldValue = coldLeads.reduce((sum, l) => sum + (l.dealValue || 0), 0);
+
+  const hotPct = totalLeads > 0 ? Math.round((hotCount / totalLeads) * 100) : 0;
+  const warmPct = totalLeads > 0 ? Math.round((warmCount / totalLeads) * 100) : 0;
+  const coldPct = totalLeads > 0 ? Math.round((coldCount / totalLeads) * 100) : 0;
+
+  const totalScoreSum = leads.reduce((sum, l) => sum + (l.score || 0), 0);
+  const avgLeadScore = totalLeads > 0 ? Math.round(totalScoreSum / totalLeads) : 0;
+
+  // ----------------------------------------------------
+  // DASHBOARD 4: Service Interest & Pipeline Value Math
+  // ----------------------------------------------------
+  const knownServices = [
+    "Thiết kế Website & WebGL",
+    "Thiết kế Landing Page",
+    "Redesign & Tối ưu UI/UX",
+    "Bảo trì & Nâng cấp Hệ thống",
+    "Tích hợp CRM & Automation",
+  ];
+
+  const serviceColors: Record<string, { bar: string; text: string; bg: string }> = {
+    "Thiết kế Website & WebGL": { bar: "bg-indigo-500", text: "text-indigo-600 dark:text-indigo-400", bg: "bg-indigo-500/10" },
+    "Thiết kế Landing Page": { bar: "bg-emerald-500", text: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-500/10" },
+    "Redesign & Tối ưu UI/UX": { bar: "bg-purple-500", text: "text-purple-600 dark:text-purple-400", bg: "bg-purple-500/10" },
+    "Bảo trì & Nâng cấp Hệ thống": { bar: "bg-amber-500", text: "text-amber-600 dark:text-amber-400", bg: "bg-amber-500/10" },
+    "Tích hợp CRM & Automation": { bar: "bg-rose-500", text: "text-rose-600 dark:text-rose-400", bg: "bg-rose-500/10" },
+    "Khác / Chưa chọn": { bar: "bg-slate-400", text: "text-slate-600 dark:text-slate-400", bg: "bg-slate-500/10" },
+  };
+
+  const serviceStats: Record<string, { count: number; value: number }> = {};
+  knownServices.forEach((srv) => {
+    serviceStats[srv] = { count: 0, value: 0 };
+  });
+
+  leads.forEach((lead) => {
+    const services = Array.isArray(lead.services) && lead.services.length > 0 ? lead.services : ["Khác / Chưa chọn"];
+    services.forEach((srv) => {
+      if (!serviceStats[srv]) {
+        serviceStats[srv] = { count: 0, value: 0 };
+      }
+      serviceStats[srv].count += 1;
+      serviceStats[srv].value += lead.dealValue || 0;
+    });
+  });
+
+  const maxServiceValue = Math.max(...Object.values(serviceStats).map((s) => s.value), 1);
+
+  const cardStyle = `p-6 rounded-2xl border transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
     isLight 
-      ? "bg-white border-slate-200/80 shadow-sm hover:shadow-md hover:shadow-slate-200/50 hover:border-amber-500/40" 
-      : "bg-zinc-900/90 border-zinc-800/90 shadow-sm hover:border-amber-500/40 hover:shadow-md hover:shadow-amber-500/5"
+      ? "bg-white border-slate-200/80 shadow-sm hover:shadow-md hover:shadow-slate-200/50 hover:border-slate-300" 
+      : "bg-zinc-900/90 border-zinc-800/90 shadow-sm hover:border-zinc-700"
   }`;
 
   return (
     <div className="space-y-6 mb-8">
       {/* Top 4 KPI Metrics */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        {/* Total Leads */}
+        {/* Total Leads (Blue Palette) */}
         <motion.div
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.05 }}
-          whileHover={{ y: -3, scale: 1.01 }}
-          whileTap={{ scale: 0.99 }}
+          whileHover={{ y: -1.5 }}
           className={cardStyle}
         >
           <div className="flex items-center justify-between mb-3">
@@ -63,22 +122,21 @@ export default function CrmKpiStats() {
             </div>
           </div>
           <div className="flex items-baseline justify-between">
-            <span className={`text-3xl font-extrabold tracking-tight tabular-nums ${isLight ? "text-slate-950" : "text-zinc-50"}`}>
+            <span className="text-3xl font-black tracking-tight tabular-nums text-blue-600 dark:text-blue-400">
               {totalLeads}
             </span>
-            <span className="text-xs font-extrabold text-emerald-700 dark:text-emerald-400 bg-emerald-500/15 px-2 py-0.5 rounded-md flex items-center gap-1">
+            <span className="text-xs font-black text-blue-700 dark:text-blue-300 bg-blue-500/15 border border-blue-500/30 px-2 py-0.5 rounded-md flex items-center gap-1">
               <TrendUp size={12} weight="bold" /> +14% mo
             </span>
           </div>
         </motion.div>
 
-        {/* Total Pipeline Value (Highlight Card with Standardized Container) */}
+        {/* Total Pipeline Value (Amber Palette) */}
         <motion.div
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.1 }}
-          whileHover={{ y: -3, scale: 1.01 }}
-          whileTap={{ scale: 0.99 }}
+          whileHover={{ y: -1.5 }}
           className={cardStyle}
         >
           <div className="flex items-center justify-between mb-3">
@@ -93,17 +151,18 @@ export default function CrmKpiStats() {
             <span className="text-3xl font-black tracking-tight tabular-nums text-amber-600 dark:text-amber-400">
               ${totalDealValue.toLocaleString()}
             </span>
-            <span className={`text-xs font-bold ${isLight ? "text-slate-600" : "text-zinc-400"}`}>Est. Deals</span>
+            <span className="text-xs font-black text-amber-700 dark:text-amber-300 bg-amber-500/15 border border-amber-500/30 px-2 py-0.5 rounded-md">
+              Est. Deals
+            </span>
           </div>
         </motion.div>
 
-        {/* Conversion Rate */}
+        {/* Conversion Rate (Emerald Palette) */}
         <motion.div
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.15 }}
-          whileHover={{ y: -3, scale: 1.01 }}
-          whileTap={{ scale: 0.99 }}
+          whileHover={{ y: -1.5 }}
           className={cardStyle}
         >
           <div className="flex items-center justify-between mb-3">
@@ -115,20 +174,21 @@ export default function CrmKpiStats() {
             </div>
           </div>
           <div className="flex items-baseline justify-between">
-            <span className={`text-3xl font-extrabold tracking-tight tabular-nums ${isLight ? "text-slate-950" : "text-zinc-50"}`}>
+            <span className="text-3xl font-black tracking-tight tabular-nums text-emerald-600 dark:text-emerald-400">
               {conversionRate}%
             </span>
-            <span className={`text-xs font-bold ${isLight ? "text-slate-600" : "text-zinc-400"}`}>{closedWonCount} Won</span>
+            <span className="text-xs font-black text-emerald-700 dark:text-emerald-300 bg-emerald-500/15 border border-emerald-500/30 px-2 py-0.5 rounded-md">
+              {closedWonCount} Won
+            </span>
           </div>
         </motion.div>
 
-        {/* New Inbound Leads */}
+        {/* New Inbound Leads (Purple Palette) */}
         <motion.div
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.2 }}
-          whileHover={{ y: -3, scale: 1.01 }}
-          whileTap={{ scale: 0.99 }}
+          whileHover={{ y: -1.5 }}
           className={cardStyle}
         >
           <div className="flex items-center justify-between mb-3">
@@ -140,141 +200,18 @@ export default function CrmKpiStats() {
             </div>
           </div>
           <div className="flex items-baseline justify-between">
-            <span className="text-3xl font-extrabold tracking-tight tabular-nums text-purple-700 dark:text-purple-400">
+            <span className="text-3xl font-black tracking-tight tabular-nums text-purple-600 dark:text-purple-400">
               {newLeadsCount}
             </span>
-            <span className="text-xs font-bold text-purple-700 dark:text-purple-400 bg-purple-500/15 px-2 py-0.5 rounded-md">
+            <span className="text-xs font-black text-purple-700 dark:text-purple-300 bg-purple-500/15 border border-purple-500/30 px-2 py-0.5 rounded-md">
               Requires Contact
             </span>
           </div>
         </motion.div>
       </div>
-
-      {/* 2 EXECUTIVE BUSINESS OWNER DASHBOARDS */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-        {/* DASHBOARD 1: Revenue Forecast & Pipeline Breakdown */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.25 }}
-          className={cardStyle}
-        >
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shadow-inner">
-                <Target size={22} weight="bold" />
-              </div>
-              <div>
-                <h3 className={`font-black text-base tracking-tight ${isLight ? "text-slate-950" : "text-zinc-50"}`}>
-                  Revenue Target & Forecast
-                </h3>
-                <p className={`text-xs font-semibold ${isLight ? "text-slate-500" : "text-zinc-400"}`}>
-                  Monthly Target: <strong className="tabular-nums">${targetMonthlyRevenue.toLocaleString()}</strong>
-                </p>
-              </div>
-            </div>
-            <span className="text-xs font-black px-2.5 py-1 rounded-lg bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/20 tabular-nums">
-              {targetProgress}% Achieved
-            </span>
-          </div>
-
-          {/* Target Progress Bar with Animation */}
-          <div className="mb-6">
-            <div className="flex justify-between text-xs font-bold mb-1.5">
-              <span className={isLight ? "text-slate-600" : "text-zinc-400"}>Current Pipeline</span>
-              <span className="text-amber-600 dark:text-amber-400 font-extrabold tabular-nums">
-                ${totalDealValue.toLocaleString()} / ${targetMonthlyRevenue.toLocaleString()}
-              </span>
-            </div>
-            <div className="w-full h-2.5 rounded-full bg-slate-100 dark:bg-zinc-800 overflow-hidden">
-              <motion.div 
-                initial={{ width: 0 }}
-                animate={{ width: `${targetProgress}%` }}
-                transition={{ duration: 0.8, ease: "easeOut" }}
-                className="h-full rounded-full bg-amber-500 shadow-sm"
-              />
-            </div>
-          </div>
-
-          {/* Stage Value Breakdown Grid */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className={`p-3.5 rounded-xl border transition-colors ${isLight ? "bg-slate-50/70 border-slate-200/60" : "bg-zinc-800/50 border-zinc-700/60"}`}>
-              <div className="flex items-center justify-between text-xs font-bold text-slate-500 dark:text-zinc-400">
-                <span>In Negotiation</span>
-                <span className="text-amber-600 font-extrabold tabular-nums">{negotiationCount} deals</span>
-              </div>
-              <div className={`text-lg font-black mt-1 tabular-nums ${isLight ? "text-slate-900" : "text-zinc-100"}`}>
-                ${negotiationValue.toLocaleString()}
-              </div>
-            </div>
-
-            <div className={`p-3.5 rounded-xl border transition-colors ${isLight ? "bg-emerald-50/60 border-emerald-200/60" : "bg-emerald-950/20 border-emerald-800/40"}`}>
-              <div className="flex items-center justify-between text-xs font-bold text-emerald-700 dark:text-emerald-400">
-                <span>Closed Won</span>
-                <span className="font-extrabold tabular-nums">{closedWonCount} deals</span>
-              </div>
-              <div className="text-lg font-black mt-1 tabular-nums text-emerald-700 dark:text-emerald-400">
-                ${closedWonValue.toLocaleString()}
-              </div>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* DASHBOARD 2: Lead Acquisition Sources & Sales Velocity */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.3 }}
-          className={cardStyle}
-        >
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center shadow-inner">
-                <Compass size={22} weight="bold" />
-              </div>
-              <div>
-                <h3 className={`font-black text-base tracking-tight ${isLight ? "text-slate-950" : "text-zinc-50"}`}>
-                  Channel Performance & Velocity
-                </h3>
-                <p className={`text-xs font-semibold ${isLight ? "text-slate-500" : "text-zinc-400"}`}>
-                  Avg Deal Size: <strong className="text-amber-600 dark:text-amber-400 tabular-nums">${avgDealSize.toLocaleString()}</strong>
-                </p>
-              </div>
-            </div>
-            <span className="text-xs font-bold px-2.5 py-1 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
-              Avg Cycle: 8.5 Days
-            </span>
-          </div>
-
-          {/* Channel Performance Breakdown */}
-          <div className="space-y-3">
-            {Object.entries(sourceCounts).map(([sourceName, data]) => {
-              const pct = totalLeads > 0 ? Math.round((data.count / totalLeads) * 100) : 0;
-              return (
-                <div key={sourceName} className="space-y-1">
-                  <div className="flex justify-between text-xs font-bold">
-                    <span className={isLight ? "text-slate-700" : "text-zinc-300"}>{sourceName}</span>
-                    <span className="text-slate-600 dark:text-zinc-400 font-extrabold tabular-nums">
-                      {data.count} leads (${data.value.toLocaleString()})
-                    </span>
-                  </div>
-                  <div className="w-full h-2.5 rounded-full bg-slate-100 dark:bg-zinc-800 overflow-hidden">
-                    <motion.div 
-                      initial={{ width: 0 }}
-                      animate={{ width: `${pct}%` }}
-                      transition={{ duration: 0.6, ease: "easeOut" }}
-                      className="h-full rounded-full bg-amber-500"
-                    />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </motion.div>
-
-      </div>
     </div>
   );
 }
+
+
 

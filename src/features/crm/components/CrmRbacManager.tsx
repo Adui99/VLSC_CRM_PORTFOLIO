@@ -364,7 +364,7 @@ export default function CrmRbacManager() {
       {/* WARNING CONFIRMATION MODAL: RESET PERMISSIONS */}
       {showResetWarningModal && (
         <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 ${
-          isLight ? "bg-slate-900/60 backdrop-blur-md" : "bg-black/80 backdrop-blur-md"
+          isLight ? "bg-slate-950/80" : "bg-black/90"
         }`}>
           <div className={`w-full max-w-md rounded-3xl p-6 shadow-2xl border text-center space-y-4 ${
             isLight ? "bg-white border-slate-200 text-slate-900" : "bg-zinc-900 border-zinc-800 text-zinc-50"
@@ -401,7 +401,7 @@ export default function CrmRbacManager() {
       {/* Delete Staff Confirmation Modal */}
       {deleteConfirmTarget && (
         <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 ${
-          isLight ? "bg-slate-900/60 backdrop-blur-md" : "bg-black/80 backdrop-blur-md"
+          isLight ? "bg-slate-950/80" : "bg-black/90"
         }`}>
           <div className={`w-full max-w-sm rounded-3xl p-6 shadow-2xl border ${
             isLight ? "bg-white border-slate-200 text-slate-900" : "bg-zinc-900 border-zinc-800 text-zinc-100"
@@ -462,7 +462,7 @@ export default function CrmRbacManager() {
       {/* Add Staff Modal */}
       {showAddStaffModal && (
         <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 ${
-          isLight ? "bg-slate-900/60 backdrop-blur-md" : "bg-black/80 backdrop-blur-md"
+          isLight ? "bg-slate-950/80" : "bg-black/90"
         }`}>
           <div className={`w-full max-w-md rounded-3xl p-6 shadow-2xl border ${
             isLight ? "bg-white border-slate-200 text-slate-900" : "bg-zinc-900 border-zinc-800 text-zinc-50"

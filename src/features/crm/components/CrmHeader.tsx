@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useRef, useEffect } from "react";
 import { useCrmStore } from "@/features/crm/store/useCrmStore";
@@ -16,8 +16,8 @@ import { UserRole } from "@/features/crm/types/crm";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface CrmHeaderProps {
-  activeTab: 'dashboard' | 'rbac' | 'settings' | 'audit';
-  setActiveTab: (tab: 'dashboard' | 'rbac' | 'settings' | 'audit') => void;
+  activeTab: 'dashboard' | 'analytics' | 'rbac' | 'settings' | 'audit';
+  setActiveTab: (tab: 'dashboard' | 'analytics' | 'rbac' | 'settings' | 'audit') => void;
   toggleMobileSidebar?: () => void;
 }
 
@@ -66,18 +66,19 @@ export default function CrmHeader({ activeTab, setActiveTab, toggleMobileSidebar
 
   const currentRoleInfo = roleColors[activeRole];
 
-  const pageTitles: Record<'dashboard' | 'rbac' | 'settings' | 'audit', string> = {
+  const pageTitles: Record<'dashboard' | 'analytics' | 'rbac' | 'settings' | 'audit', string> = {
     dashboard: "Lead Analytics & Workspace",
+    analytics: "Executive Analytics & Financial Intelligence",
     rbac: "Team Personnel & RBAC Management",
     settings: "Account & Profile Settings",
     audit: "System Audit Log",
   };
 
   return (
-    <header className={`h-16 border-b px-6 flex items-center justify-between transition-colors duration-200 sticky top-0 z-30 ${
+    <header className={`h-16 border-b px-6 flex items-center justify-between transition-colors duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] sticky top-0 z-30 ${
       isLight 
-        ? "bg-white/90 backdrop-blur-md border-slate-200/90 text-slate-900 shadow-sm" 
-        : "bg-zinc-900/90 backdrop-blur-md border-zinc-800 text-zinc-100"
+        ? "bg-white border-slate-200/90 text-slate-900 shadow-sm" 
+        : "bg-zinc-900 border-zinc-800 text-zinc-100"
     }`}>
       
       {/* Left: Mobile Toggle & Page Title */}
