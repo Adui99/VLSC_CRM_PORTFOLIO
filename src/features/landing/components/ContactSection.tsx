@@ -41,7 +41,7 @@ export default function ContactSection() {
           onClick={openModal}
         >
           <MagneticButton className="bg-amber-500 text-zinc-950 px-12 py-6 text-xl rounded-full hover:bg-transparent hover:text-amber-500 hover:border hover:border-amber-500 font-medium transition-colors">
-            hello@portfolio.com
+            duy.hoang030199@gmail.com
           </MagneticButton>
         </motion.div>
 
