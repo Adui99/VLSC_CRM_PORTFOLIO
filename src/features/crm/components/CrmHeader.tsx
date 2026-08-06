@@ -11,6 +11,8 @@ import {
   Gear,
   Bell,
   X,
+  CaretLeft,
+  CaretRight,
 } from "@phosphor-icons/react";
 import { UserRole } from "@/features/crm/types/crm";
 import { motion, AnimatePresence } from "framer-motion";
@@ -25,13 +27,13 @@ export default function CrmHeader({ activeTab, setActiveTab, toggleMobileSidebar
   const { 
     theme, toggleTheme, currentUser, logout, testRole, setTestRole,
     notifications, dismissNotification, clearAllNotifications,
+    sidebarCollapsed, toggleSidebarCollapsed,
   } = useCrmStore();
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [notiDropdownOpen, setNotiDropdownOpen] = useState(false);
   const notiRef = useRef<HTMLDivElement>(null);
 
   const isLight = theme === 'light';
-  // Super Admin check based on actual user account role in DB
   const isSuperAdmin = currentUser?.role === 'super_admin';
   const activeRole = testRole || currentUser?.role || 'sales_rep';
 
@@ -75,14 +77,14 @@ export default function CrmHeader({ activeTab, setActiveTab, toggleMobileSidebar
   };
 
   return (
-    <header className={`h-16 border-b px-6 flex items-center justify-between transition-colors duration-200 sticky top-0 z-30 ${
+    <header className={`h-16 border-b px-4 sm:px-6 flex items-center justify-between transition-colors duration-200 sticky top-0 z-30 ${
       isLight 
         ? "bg-white border-slate-200/60 text-slate-900 shadow-xs" 
         : "bg-zinc-900 border-zinc-800/60 text-zinc-100"
     }`}>
       
-      {/* Left: Mobile Toggle & Page Title */}
-      <div className="flex items-center gap-4">
+      {/* Left: Mobile Toggle, Desktop Sidebar Collapse Toggle & Page Title */}
+      <div className="flex items-center gap-3">
         {toggleMobileSidebar && (
           <button
             onClick={toggleMobileSidebar}
@@ -92,26 +94,43 @@ export default function CrmHeader({ activeTab, setActiveTab, toggleMobileSidebar
           </button>
         )}
 
+        {/* Desktop Sidebar Collapse / Expand Toggle Button */}
+        <button
+          onClick={toggleSidebarCollapsed}
+          title={sidebarCollapsed ? "Mở rộng thanh bên" : "Thu nhỏ thanh bên"}
+          className={`hidden lg:flex items-center justify-center w-9 h-9 rounded-xl border transition-all cursor-pointer ${
+            isLight
+              ? "bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100 hover:border-amber-500/40"
+              : "bg-zinc-800/60 border-zinc-700/60 text-zinc-300 hover:bg-zinc-800 hover:border-amber-500/40"
+          }`}
+        >
+          {sidebarCollapsed ? (
+            <CaretRight size={18} weight="bold" className="text-amber-500" />
+          ) : (
+            <CaretLeft size={18} weight="bold" className="text-amber-500" />
+          )}
+        </button>
+
         <div>
-          <h1 className={`text-base sm:text-lg font-bold tracking-tight ${isLight ? "text-slate-900" : "text-zinc-100"}`}>
+          <h1 className={`text-sm sm:text-base font-bold tracking-tight ${isLight ? "text-slate-900" : "text-zinc-100"}`}>
             {pageTitles[activeTab]}
           </h1>
-          <p className={`text-xs hidden sm:block font-medium ${isLight ? "text-slate-500" : "text-zinc-400"}`}>
+          <p className={`text-[11px] hidden sm:block font-medium ${isLight ? "text-slate-500" : "text-zinc-400"}`}>
             Internal Enterprise Portal • VLSC CRM
           </p>
         </div>
       </div>
 
-      {/* Right: Quick Role Test, Notification Bell, Mode Switcher, User Dropdown */}
-      <div className="flex items-center gap-3">
+      {/* Right: Quick Role Test, Notifications, Theme Switcher, User Dropdown */}
+      <div className="flex items-center gap-2 sm:gap-3">
         
         {/* Test Role Quick Selector */}
         {isSuperAdmin && (
-          <div className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs ${
+          <div className={`hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs ${
             isLight ? "bg-slate-50/50 border-slate-200/80 shadow-xs" : "bg-zinc-800/60 border-zinc-700/60"
           }`}>
             <UserGear size={15} className="text-amber-500" />
-            <span className={`font-extrabold ${isLight ? "text-slate-900" : "text-zinc-300"}`}>Role Test:</span>
+            <span className={`font-extrabold ${isLight ? "text-slate-900" : "text-zinc-300"}`}>Test View As:</span>
             <select
               value={activeRole}
               onChange={(e) => {
@@ -179,7 +198,7 @@ export default function CrmHeader({ activeTab, setActiveTab, toggleMobileSidebar
                       onClick={clearAllNotifications}
                       className="text-[10px] font-semibold text-slate-500 dark:text-zinc-400 hover:text-red-500 transition-colors cursor-pointer"
                     >
-                      Clear All
+                      Clear all
                     </button>
                   )}
                 </div>
@@ -190,7 +209,7 @@ export default function CrmHeader({ activeTab, setActiveTab, toggleMobileSidebar
                     <div className="py-10 text-center">
                       <Bell size={28} className="mx-auto text-slate-300 dark:text-zinc-600 mb-2" />
                       <p className={`text-xs font-semibold ${isLight ? "text-slate-400" : "text-zinc-500"}`}>
-                        No new notifications
+                        No notifications yet
                       </p>
                     </div>
                   ) : (
@@ -288,7 +307,7 @@ export default function CrmHeader({ activeTab, setActiveTab, toggleMobileSidebar
                   }}
                   className="w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-700 dark:text-zinc-200 hover:bg-slate-50 dark:hover:bg-zinc-800/60 hover:text-slate-900 dark:hover:text-amber-400 transition-colors cursor-pointer"
                 >
-                  <Gear size={16} weight="bold" /> User Settings
+                  <Gear size={16} weight="bold" /> Account Settings
                 </button>
 
                 <button

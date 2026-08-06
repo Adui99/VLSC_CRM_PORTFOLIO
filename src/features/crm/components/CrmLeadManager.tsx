@@ -869,7 +869,7 @@ function KanbanColumn({ statusKey, label, dotColor, leads, totalValue, isLight, 
   return (
     <div
       ref={setNodeRef}
-      className={`p-4 rounded-2xl border flex flex-col min-h-[500px] transition-all duration-200 ${
+      className={`p-3.5 rounded-2xl border flex flex-col transition-all duration-200 ${
         isLocked
           ? isLight
             ? "bg-slate-200/60 border-slate-300/60 opacity-80"
@@ -884,7 +884,7 @@ function KanbanColumn({ statusKey, label, dotColor, leads, totalValue, isLight, 
       }`}
     >
       {/* Column Header — clear label + count */}
-      <div className="mb-3 pb-3 border-b border-slate-200/80 dark:border-zinc-800">
+      <div className="mb-2.5 pb-2.5 border-b border-slate-200/80 dark:border-zinc-800">
         <div className="flex items-center gap-2 mb-1">
           <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${dotColor}`} />
           <span className={`font-extrabold text-sm tracking-tight flex-1 ${isLight ? "text-slate-800" : "text-zinc-100"}`}>
@@ -906,14 +906,14 @@ function KanbanColumn({ statusKey, label, dotColor, leads, totalValue, isLight, 
         </div>
       </div>
 
-      {/* Cards */}
+      {/* Cards — max 5 leads visible (~510px), hidden scrollbar */}
       <SortableContext items={leads.map((l) => l.id)} strategy={verticalListSortingStrategy}>
-        <div className="flex flex-col gap-3 flex-1">
+        <div className="flex flex-col gap-2.5 max-h-[510px] overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden pr-0.5">
           {leads.map((lead) => (
             <KanbanCard key={lead.id} lead={lead} isLight={isLight} onClick={onCardClick} isDraggable={!isLocked} />
           ))}
           {leads.length === 0 && !isLocked && (
-            <div className={`flex-1 min-h-[60px] rounded-xl border-2 border-dashed flex items-center justify-center text-xs font-semibold ${
+            <div className={`h-[120px] rounded-xl border-2 border-dashed flex items-center justify-center text-xs font-semibold ${
               isLight ? "border-slate-300 text-slate-400" : "border-zinc-700 text-zinc-600"
             }`}>
               Drop here
@@ -954,7 +954,7 @@ function KanbanCard({ lead, isLight, onClick, isDraggable = true }: KanbanCardPr
       style={style}
       {...(isDraggable ? attributes : {})}
       {...(isDraggable ? listeners : {})}
-      className={`p-4 rounded-xl border transition-all duration-200 ${
+      className={`p-3.5 rounded-xl border transition-all duration-200 ${
         isDraggable ? "cursor-grab active:cursor-grabbing" : "cursor-default"
       } ${
         isLight

@@ -87,6 +87,10 @@ interface CrmStoreState {
   theme: ThemeMode;
   toggleTheme: () => void;
 
+  sidebarCollapsed: boolean;
+  setSidebarCollapsed: (collapsed: boolean) => void;
+  toggleSidebarCollapsed: () => void;
+
   currentUser: StaffUser | null;
   isAuthenticated: boolean;
   login: (email: string) => boolean;
@@ -137,6 +141,10 @@ export const useCrmStore = create<CrmStoreState>()(
     (set, get) => ({
       theme: 'dark',
       toggleTheme: () => set((state) => ({ theme: state.theme === 'light' ? 'dark' : 'light' })),
+
+      sidebarCollapsed: false,
+      setSidebarCollapsed: (collapsed) => set({ sidebarCollapsed: collapsed }),
+      toggleSidebarCollapsed: () => set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
 
       testRole: null,
       setTestRole: (role) => set({ testRole: role }),
