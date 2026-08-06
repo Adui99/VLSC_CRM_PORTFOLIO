@@ -129,37 +129,37 @@ export default function CrmExecutiveAnalytics() {
 
   const cardStyle = `p-6 rounded-2xl border transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
     isLight 
-      ? "bg-white border-slate-200/80 shadow-sm hover:shadow-md hover:border-slate-300" 
-      : "bg-zinc-900/90 border-zinc-800/90 shadow-sm hover:border-zinc-700"
+      ? "bg-white border-slate-200/60 shadow-sm shadow-slate-200/50 hover:shadow-md hover:shadow-slate-200/80 hover:border-amber-500/40 hover:-translate-y-0.5" 
+      : "bg-zinc-900/80 border-zinc-800/60 shadow-sm shadow-black/20 hover:shadow-md hover:shadow-black/40 hover:border-amber-500/40 hover:-translate-y-0.5 text-zinc-100"
   }`;
 
   return (
     <div className="space-y-6 mb-8 max-w-7xl mx-auto">
       {/* Header Banner for Super Admin */}
       <div className={`p-6 sm:p-8 rounded-3xl border transition-colors ${
-        isLight ? "bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-white border-amber-500/30" : "bg-gradient-to-r from-amber-500/15 via-zinc-900 to-zinc-900 border-amber-500/30"
+        isLight ? "bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-white border-amber-500/20 shadow-xs" : "bg-gradient-to-r from-amber-500/15 via-zinc-900 to-zinc-900 border-amber-500/20 shadow-xs"
       }`}>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <span className="text-xs font-black uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-amber-500 text-slate-950">
+              <span className="text-xs font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-amber-500 text-slate-950">
                 👑 Super Admin Exclusive
               </span>
-              <span className={`text-xs font-extrabold ${isLight ? "text-slate-600" : "text-zinc-400"}`}>
+              <span className={`text-xs font-semibold ${isLight ? "text-slate-600" : "text-zinc-400"}`}>
                 Executive Data Intelligence
               </span>
             </div>
-            <h2 className={`text-2xl sm:text-3xl font-black tracking-tight ${isLight ? "text-slate-950" : "text-zinc-50"}`}>
+            <h2 className={`text-2xl sm:text-3xl font-bold tracking-tight ${isLight ? "text-slate-900" : "text-zinc-50"}`}>
               Executive Analytics & Financial Intelligence
             </h2>
-            <p className={`text-xs sm:text-sm font-semibold mt-1 ${isLight ? "text-slate-600" : "text-zinc-400"}`}>
+            <p className={`text-xs sm:text-sm font-medium mt-1 ${isLight ? "text-slate-600" : "text-zinc-400"}`}>
               Visualized metrics, lead distribution, digital conversion rates, and 35% profit margin cash flow.
             </p>
           </div>
 
           <div className="flex items-center gap-3">
-            <div className={`p-3.5 rounded-2xl border text-right ${isLight ? "bg-white border-amber-500/30 shadow-sm" : "bg-zinc-950 border-amber-500/30"}`}>
-              <span className={`text-[10px] font-extrabold uppercase block ${isLight ? "text-slate-500" : "text-zinc-400"}`}>
+            <div className={`p-3.5 rounded-2xl border text-right ${isLight ? "bg-white border-amber-500/20 shadow-xs" : "bg-zinc-950 border-amber-500/20"}`}>
+              <span className={`text-[10px] font-bold uppercase block ${isLight ? "text-slate-500" : "text-zinc-400"}`}>
                 Net Profit (Realized 35%)
               </span>
               <span className="text-xl font-black text-amber-600 dark:text-amber-400 tabular-nums">

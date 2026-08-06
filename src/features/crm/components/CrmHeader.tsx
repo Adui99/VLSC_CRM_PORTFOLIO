@@ -75,29 +75,28 @@ export default function CrmHeader({ activeTab, setActiveTab, toggleMobileSidebar
   };
 
   return (
-    <header className={`h-16 border-b px-6 flex items-center justify-between transition-colors duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] sticky top-0 z-30 ${
+    <header className={`h-16 border-b px-6 flex items-center justify-between transition-colors duration-200 sticky top-0 z-30 ${
       isLight 
-        ? "bg-white border-slate-200/90 text-slate-900 shadow-sm" 
-        : "bg-zinc-900 border-zinc-800 text-zinc-100"
+        ? "bg-white border-slate-200/60 text-slate-900 shadow-xs" 
+        : "bg-zinc-900 border-zinc-800/60 text-zinc-100"
     }`}>
       
       {/* Left: Mobile Toggle & Page Title */}
       <div className="flex items-center gap-4">
         {toggleMobileSidebar && (
-          <motion.button
-            whileTap={{ scale: 0.95 }}
+          <button
             onClick={toggleMobileSidebar}
             className="lg:hidden p-2 rounded-xl text-slate-500 hover:text-slate-900 dark:hover:text-zinc-100 hover:bg-slate-100 dark:hover:bg-zinc-800 cursor-pointer transition-colors"
           >
             <List size={22} weight="bold" />
-          </motion.button>
+          </button>
         )}
 
         <div>
-          <h1 className={`text-lg font-extrabold tracking-tight ${isLight ? "text-slate-950" : "text-zinc-50"}`}>
+          <h1 className={`text-base sm:text-lg font-bold tracking-tight ${isLight ? "text-slate-900" : "text-zinc-100"}`}>
             {pageTitles[activeTab]}
           </h1>
-          <p className={`text-xs hidden sm:block font-bold ${isLight ? "text-slate-600" : "text-zinc-400"}`}>
+          <p className={`text-xs hidden sm:block font-medium ${isLight ? "text-slate-500" : "text-zinc-400"}`}>
             Internal Enterprise Portal • VLSC CRM
           </p>
         </div>
@@ -108,8 +107,8 @@ export default function CrmHeader({ activeTab, setActiveTab, toggleMobileSidebar
         
         {/* Test Role Quick Selector */}
         {isSuperAdmin && (
-          <div className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs ${
-            isLight ? "bg-white border-slate-300 shadow-sm" : "bg-zinc-800/60 border-zinc-700/60"
+          <div className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs ${
+            isLight ? "bg-slate-50/50 border-slate-200/80 shadow-xs" : "bg-zinc-800/60 border-zinc-700/60"
           }`}>
             <UserGear size={15} className="text-amber-500" />
             <span className={`font-extrabold ${isLight ? "text-slate-900" : "text-zinc-300"}`}>Role Test:</span>
@@ -134,19 +133,19 @@ export default function CrmHeader({ activeTab, setActiveTab, toggleMobileSidebar
         {/* F4: Notification Bell */}
         <div className="relative" ref={notiRef}>
           <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
             onClick={() => setNotiDropdownOpen((prev) => !prev)}
-            className={`relative p-2 rounded-xl border transition-all duration-200 cursor-pointer ${
+            className={`relative p-2 rounded-xl border transition-colors cursor-pointer ${
               isLight 
-                ? "bg-white border-slate-300 text-slate-700 hover:bg-slate-100 hover:border-amber-500/50 shadow-sm" 
-                : "bg-zinc-800 border-zinc-700 text-zinc-300 hover:bg-zinc-700 hover:border-amber-500/50"
+                ? "bg-white border-slate-200/60 text-slate-700 hover:bg-slate-50 hover:border-amber-500/40 shadow-xs" 
+                : "bg-zinc-800/60 border-zinc-700/60 text-zinc-300 hover:bg-zinc-800 hover:border-amber-500/40"
             }`}
             title="Notifications"
           >
             <Bell size={18} weight={notifications.length > 0 ? "fill" : "bold"} className={notifications.length > 0 ? "text-amber-500" : ""} />
             {notifications.length > 0 && (
-              <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 text-white text-[9px] font-black flex items-center justify-center shadow-sm">
+              <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center shadow-xs">
                 {notifications.length > 9 ? '9+' : notifications.length}
               </span>
             )}
@@ -160,25 +159,25 @@ export default function CrmHeader({ activeTab, setActiveTab, toggleMobileSidebar
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: -8, scale: 0.97 }}
                 transition={{ duration: 0.15 }}
-                className={`absolute right-0 mt-2 w-80 rounded-2xl shadow-2xl border z-50 overflow-hidden ${
+                className={`absolute right-0 mt-2 w-80 rounded-2xl shadow-xl border z-50 overflow-hidden ${
                   isLight 
-                    ? "bg-white border-slate-200 shadow-slate-300/40" 
-                    : "bg-zinc-900 border-zinc-800 shadow-black/60"
+                    ? "bg-white border-slate-200/60 shadow-slate-200/60" 
+                    : "bg-zinc-900 border-zinc-800/60 shadow-black/60"
                 }`}
               >
                 {/* Dropdown Header */}
-                <div className={`flex items-center justify-between px-4 py-3 border-b ${isLight ? "border-slate-100" : "border-zinc-800"}`}>
+                <div className={`flex items-center justify-between px-4 py-3 border-b ${isLight ? "border-slate-100" : "border-zinc-800/40"}`}>
                   <div className="flex items-center gap-2">
                     <Bell size={15} weight="bold" className="text-amber-500" />
-                    <span className="text-sm font-extrabold">Notifications</span>
+                    <span className="text-sm font-bold">Notifications</span>
                     {notifications.length > 0 && (
-                      <span className="text-[10px] font-black px-1.5 py-0.5 rounded-full bg-red-500/10 text-red-500">{notifications.length}</span>
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-red-500/10 text-red-500">{notifications.length}</span>
                     )}
                   </div>
                   {notifications.length > 0 && (
                     <button
                       onClick={clearAllNotifications}
-                      className="text-[10px] font-extrabold text-slate-500 dark:text-zinc-400 hover:text-red-500 transition-colors cursor-pointer"
+                      className="text-[10px] font-semibold text-slate-500 dark:text-zinc-400 hover:text-red-500 transition-colors cursor-pointer"
                     >
                       Clear All
                     </button>
@@ -199,7 +198,7 @@ export default function CrmHeader({ activeTab, setActiveTab, toggleMobileSidebar
                       <div
                         key={noti.id}
                         className={`flex items-start gap-3 px-4 py-3 border-b last:border-0 transition-colors ${
-                          isLight ? "border-slate-50 hover:bg-amber-50/50" : "border-zinc-800 hover:bg-zinc-800/40"
+                          isLight ? "border-slate-50 hover:bg-amber-50/40" : "border-zinc-800/40 hover:bg-zinc-800/40"
                         }`}
                       >
                         <div className="w-8 h-8 rounded-full bg-amber-500/15 border border-amber-500/30 flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -209,7 +208,7 @@ export default function CrmHeader({ activeTab, setActiveTab, toggleMobileSidebar
                           <p className={`text-xs font-bold leading-snug ${isLight ? "text-slate-900" : "text-zinc-100"}`}>
                             {noti.message}
                           </p>
-                          <p className={`text-[10px] font-semibold mt-0.5 ${isLight ? "text-slate-400" : "text-zinc-500"}`}>
+                          <p className={`text-[10px] font-medium mt-0.5 ${isLight ? "text-slate-400" : "text-zinc-500"}`}>
                             {new Date(noti.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </p>
                         </div>
@@ -230,13 +229,13 @@ export default function CrmHeader({ activeTab, setActiveTab, toggleMobileSidebar
 
         {/* Light / Dark Mode Switch */}
         <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+          whileHover={{ scale: 1.03 }}
+          whileTap={{ scale: 0.97 }}
           onClick={toggleTheme}
-          className={`p-2 rounded-xl border transition-all duration-200 cursor-pointer ${
+          className={`p-2 rounded-xl border transition-colors cursor-pointer ${
             isLight 
-              ? "bg-white border-slate-300 text-slate-900 hover:bg-slate-100 hover:border-amber-500/50 shadow-sm" 
-              : "bg-zinc-800 border-zinc-700 text-amber-400 hover:bg-zinc-700 hover:border-amber-500/50"
+              ? "bg-white border-slate-200/60 text-slate-800 hover:bg-slate-50 hover:border-amber-500/40 shadow-xs" 
+              : "bg-zinc-800/60 border-zinc-700/60 text-amber-400 hover:bg-zinc-800 hover:border-amber-500/40"
           }`}
           title={isLight ? "Switch to Dark Mode" : "Switch to Light Mode"}
         >
@@ -249,22 +248,22 @@ export default function CrmHeader({ activeTab, setActiveTab, toggleMobileSidebar
             <motion.button
               whileTap={{ scale: 0.98 }}
               onClick={() => { setProfileDropdownOpen(!profileDropdownOpen); setNotiDropdownOpen(false); }}
-              className={`flex items-center gap-2.5 p-1.5 px-3 rounded-xl border transition-all duration-200 cursor-pointer ${
+              className={`flex items-center gap-2.5 p-1.5 px-3 rounded-xl border transition-colors cursor-pointer ${
                 isLight 
-                  ? "bg-white hover:bg-slate-50 border-slate-200 hover:border-amber-500/50 shadow-sm" 
-                  : "bg-zinc-800/60 hover:bg-zinc-800 border-zinc-700/60 hover:border-amber-500/50"
+                  ? "bg-white hover:bg-slate-50 border-slate-200/60 hover:border-amber-500/40 shadow-xs" 
+                  : "bg-zinc-800/60 hover:bg-zinc-800 border-zinc-700/60 hover:border-amber-500/40"
               }`}
             >
               <img
                 src={currentUser.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100"}
                 alt={currentUser.name}
-                className="w-8 h-8 rounded-full object-cover ring-2 ring-amber-500/60"
+                className="w-8 h-8 rounded-full object-cover ring-2 ring-amber-500/50"
               />
               <div className="hidden sm:flex flex-col text-left">
-                <span className={`text-xs font-black leading-tight ${isLight ? "text-slate-950" : "text-zinc-100"}`}>
+                <span className={`text-xs font-bold leading-tight ${isLight ? "text-slate-900" : "text-zinc-100"}`}>
                   {currentUser.name}
                 </span>
-                <span className={`text-[10px] font-extrabold border rounded px-1.5 py-0.2 mt-0.5 ${currentRoleInfo.bg} ${currentRoleInfo.text}`}>
+                <span className={`text-[10px] font-bold border rounded px-1.5 py-0.2 mt-0.5 ${currentRoleInfo.bg} ${currentRoleInfo.text}`}>
                   {currentRoleInfo.label}
                 </span>
               </div>
@@ -272,14 +271,14 @@ export default function CrmHeader({ activeTab, setActiveTab, toggleMobileSidebar
 
             {/* Profile Dropdown Menu */}
             {profileDropdownOpen && (
-              <div className={`absolute right-0 mt-2 w-60 rounded-2xl shadow-2xl border p-2 z-50 transition-all ${
+              <div className={`absolute right-0 mt-2 w-60 rounded-2xl shadow-xl border p-2 z-50 transition-all ${
                 isLight 
-                  ? "bg-white border-slate-200/90 text-slate-950 shadow-slate-300/40" 
-                  : "bg-zinc-900 border-zinc-800 text-zinc-100 shadow-black/60"
+                  ? "bg-white border-slate-200/60 text-slate-900 shadow-slate-200/60" 
+                  : "bg-zinc-900 border-zinc-800/60 text-zinc-100 shadow-black/60"
               }`}>
-                <div className="p-3 border-b border-slate-100 dark:border-zinc-800 mb-1">
-                  <div className="font-black text-sm text-slate-950 dark:text-zinc-50">{currentUser.name}</div>
-                  <div className="text-xs text-slate-600 dark:text-zinc-400 font-bold truncate mt-0.5">{currentUser.email}</div>
+                <div className="p-3 border-b border-slate-100 dark:border-zinc-800/40 mb-1">
+                  <div className="font-bold text-sm text-slate-900 dark:text-zinc-50">{currentUser.name}</div>
+                  <div className="text-xs text-slate-500 dark:text-zinc-400 font-medium truncate mt-0.5">{currentUser.email}</div>
                 </div>
 
                 <button
@@ -287,7 +286,7 @@ export default function CrmHeader({ activeTab, setActiveTab, toggleMobileSidebar
                     setActiveTab('settings');
                     setProfileDropdownOpen(false);
                   }}
-                  className="w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-extrabold text-slate-800 dark:text-zinc-200 hover:bg-amber-500/15 hover:text-amber-800 dark:hover:text-amber-400 transition-colors cursor-pointer"
+                  className="w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-700 dark:text-zinc-200 hover:bg-slate-50 dark:hover:bg-zinc-800/60 hover:text-slate-900 dark:hover:text-amber-400 transition-colors cursor-pointer"
                 >
                   <Gear size={16} weight="bold" /> User Settings
                 </button>
@@ -297,7 +296,7 @@ export default function CrmHeader({ activeTab, setActiveTab, toggleMobileSidebar
                     setProfileDropdownOpen(false);
                     logout();
                   }}
-                  className="w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-extrabold text-red-600 dark:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
+                  className="w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50/60 dark:hover:bg-rose-500/10 transition-colors cursor-pointer"
                 >
                   <SignOut size={16} weight="bold" /> Log Out
                 </button>

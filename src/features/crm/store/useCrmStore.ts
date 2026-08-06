@@ -113,6 +113,9 @@ interface CrmStoreState {
   inspectingLead: Lead | null;
   setInspectingLead: (lead: Lead | null) => void;
 
+  leadStatusFilter: string;
+  setLeadStatusFilter: (status: string) => void;
+
   permissions: PermissionMatrix;
   updatePermission: (role: UserRole, key: keyof RolePermission, value: boolean) => void;
   saveAllPermissions: (newMatrix: PermissionMatrix) => void;
@@ -132,7 +135,7 @@ interface CrmStoreState {
 export const useCrmStore = create<CrmStoreState>()(
   persist(
     (set, get) => ({
-      theme: 'light',
+      theme: 'dark',
       toggleTheme: () => set((state) => ({ theme: state.theme === 'light' ? 'dark' : 'light' })),
 
       testRole: null,
@@ -140,6 +143,9 @@ export const useCrmStore = create<CrmStoreState>()(
 
       inspectingLead: null,
       setInspectingLead: (lead) => set({ inspectingLead: lead }),
+
+      leadStatusFilter: 'all',
+      setLeadStatusFilter: (status) => set({ leadStatusFilter: status }),
 
       currentUser: INITIAL_STAFF[0],
       isAuthenticated: true,
@@ -622,9 +628,9 @@ export const useCrmStore = create<CrmStoreState>()(
     {
       name: 'vlsc_crm_storage',
       storage: createJSONStorage(() => localStorage),
-      // Exclude notifications from persistence (in-memory only)
+      // Exclude notifications & transient filters from persistence (in-memory only)
       partialize: (state) => {
-        const { notifications: _notifications, auditLogs: _auditLogs, ...persisted } = state;
+        const { notifications: _notifications, auditLogs: _auditLogs, leadStatusFilter: _leadStatusFilter, ...persisted } = state;
         return persisted;
       },
     }

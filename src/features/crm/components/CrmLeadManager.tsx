@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useCrmStore } from "@/features/crm/store/useCrmStore";
 import { Lead, LeadStatus } from "@/features/crm/types/crm";
 import { 
@@ -31,9 +31,15 @@ import CrmLeadDetailModal from "./CrmLeadDetailModal";
 import { isCorporateEmail } from "@/features/crm/utils/calculateLeadScore";
 
 export default function CrmLeadManager() {
-  const { leads, theme, deleteLead, permissions, currentUser, addLead, inspectingLead, setInspectingLead, updateLeadStatus, reorderLeadsInColumn } = useCrmStore();
+  const { leads, theme, deleteLead, permissions, currentUser, addLead, inspectingLead, setInspectingLead, updateLeadStatus, reorderLeadsInColumn, leadStatusFilter, setLeadStatusFilter } = useCrmStore();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
+
+  useEffect(() => {
+    if (leadStatusFilter) {
+      setSelectedStatus(leadStatusFilter);
+    }
+  }, [leadStatusFilter]);
   const [viewMode, setViewMode] = useState<'table' | 'kanban'>('table');
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [showAddLeadModal, setShowAddLeadModal] = useState(false);
@@ -113,17 +119,19 @@ export default function CrmLeadManager() {
   const currentRole = currentUser?.role || 'sales_rep';
   const userPerms = permissions[currentRole];
 
-  // Filtering
-  const filteredLeads = leads.filter((lead) => {
-    const matchesSearch =
-      lead.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      lead.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (lead.company && lead.company.toLowerCase().includes(searchQuery.toLowerCase()));
+  // Filtering & Sorting (Newest leads prioritized on top)
+  const filteredLeads = leads
+    .filter((lead) => {
+      const matchesSearch =
+        lead.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        lead.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (lead.company && lead.company.toLowerCase().includes(searchQuery.toLowerCase()));
 
-    const matchesStatus = selectedStatus === "all" || lead.status === selectedStatus;
+      const matchesStatus = selectedStatus === "all" || lead.status === selectedStatus;
 
-    return matchesSearch && matchesStatus;
-  });
+      return matchesSearch && matchesStatus;
+    })
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   // CSV Export
   const exportToCSV = () => {
@@ -152,11 +160,11 @@ export default function CrmLeadManager() {
   };
 
   const statusBadgeStyle: Record<LeadStatus, string> = {
-    new: isLight ? "bg-purple-100/90 text-purple-900 border-purple-300 font-bold" : "bg-purple-500/15 text-purple-300 border-purple-500/30",
-    contacted: isLight ? "bg-blue-100/90 text-blue-900 border-blue-300 font-bold" : "bg-blue-500/15 text-blue-300 border-blue-500/30",
-    in_negotiation: isLight ? "bg-amber-100/90 text-amber-950 border-amber-400 font-bold" : "bg-amber-500/15 text-amber-300 border-amber-500/30",
-    closed_won: isLight ? "bg-emerald-100/90 text-emerald-900 border-emerald-300 font-bold" : "bg-emerald-500/15 text-emerald-300 border-emerald-500/30",
-    closed_lost: isLight ? "bg-red-100/90 text-red-900 border-red-300 font-bold" : "bg-red-500/15 text-red-300 border-red-500/30",
+    new: isLight ? "bg-purple-50 text-purple-700 border-purple-200/80 font-semibold" : "bg-purple-500/10 text-purple-300 border-purple-500/20 font-semibold",
+    contacted: isLight ? "bg-blue-50 text-blue-700 border-blue-200/80 font-semibold" : "bg-blue-500/10 text-blue-300 border-blue-500/20 font-semibold",
+    in_negotiation: isLight ? "bg-amber-50 text-amber-800 border-amber-200/80 font-semibold" : "bg-amber-500/10 text-amber-300 border-amber-500/20 font-semibold",
+    closed_won: isLight ? "bg-emerald-50 text-emerald-700 border-emerald-200/80 font-semibold" : "bg-emerald-500/10 text-emerald-300 border-emerald-500/20 font-semibold",
+    closed_lost: isLight ? "bg-rose-50 text-rose-700 border-rose-200/80 font-semibold" : "bg-rose-500/10 text-rose-300 border-rose-500/20 font-semibold",
   };
 
   const statusLabels: Record<LeadStatus, string> = {
@@ -230,22 +238,23 @@ export default function CrmLeadManager() {
     <div className="space-y-6">
       
       {/* Controls Bar */}
-      <div className={`p-4 rounded-2xl border flex flex-col md:flex-row items-center justify-between gap-4 transition-colors ${
-        isLight ? "bg-white border-slate-200/80 shadow-sm" : "bg-zinc-900/90 border-zinc-800/90"
+      {/* Controls Bar */}
+      <div className={`p-3.5 rounded-xl border flex flex-col md:flex-row items-center justify-between gap-3.5 transition-colors ${
+        isLight ? "bg-white border-slate-200/60 shadow-xs" : "bg-zinc-900/90 border-zinc-800/60"
       }`}>
         
         {/* Search & Filter */}
         <div className="flex flex-1 flex-col sm:flex-row items-center gap-3 w-full">
           {/* Search Input */}
           <div className="relative w-full sm:max-w-xs">
-            <MagnifyingGlass size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+            <MagnifyingGlass size={17} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search leads by name, email..."
-              className={`w-full pl-10 pr-4 py-2 rounded-xl text-sm border transition-all focus:outline-none focus:ring-2 focus:ring-amber-500/40 focus:border-amber-500 ${
-                isLight ? "bg-slate-50 border-slate-300 text-slate-900 font-medium" : "bg-zinc-950 border-zinc-800 text-zinc-100"
+              className={`w-full pl-9 pr-3.5 py-2 rounded-lg text-xs border transition-all focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500/60 ${
+                isLight ? "bg-slate-50/50 border-slate-200/80 text-slate-800 font-medium hover:border-slate-300" : "bg-zinc-950 border-zinc-800 text-zinc-100 hover:border-zinc-700"
               }`}
             />
           </div>
@@ -254,9 +263,12 @@ export default function CrmLeadManager() {
           <div className="relative w-full sm:w-auto">
             <select
               value={selectedStatus}
-              onChange={(e) => setSelectedStatus(e.target.value)}
-              className={`w-full sm:w-auto px-4 py-2 rounded-xl text-sm font-semibold border focus:outline-none focus:ring-2 focus:ring-amber-500/40 focus:border-amber-500 cursor-pointer ${
-                isLight ? "bg-slate-50 border-slate-300 text-slate-900" : "bg-zinc-950 border-zinc-800 text-zinc-200"
+              onChange={(e) => {
+                setSelectedStatus(e.target.value);
+                setLeadStatusFilter(e.target.value);
+              }}
+              className={`w-full sm:w-auto px-3.5 py-2 rounded-lg text-xs font-semibold border transition-all focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500/60 cursor-pointer ${
+                isLight ? "bg-slate-50/50 border-slate-200/80 text-slate-800 hover:border-slate-300" : "bg-zinc-950 border-zinc-800 text-zinc-200 hover:border-zinc-700"
               }`}
             >
               <option value="all">All Statuses</option>
@@ -270,58 +282,57 @@ export default function CrmLeadManager() {
         </div>
 
         {/* View Switcher & Actions */}
-        <div className="flex items-center gap-2.5 w-full md:w-auto justify-end">
+        <div className="flex items-center gap-2 w-full md:w-auto justify-end">
           
           {/* Table / Kanban Toggle */}
-          <div className={`flex items-center p-1 rounded-xl border ${
-            isLight ? "bg-slate-100 border-slate-300/80" : "bg-zinc-950 border-zinc-800"
+          <div className={`flex items-center p-1 rounded-lg border ${
+            isLight ? "bg-slate-50 border-slate-200/60" : "bg-zinc-950 border-zinc-800/80"
           }`}>
             <button
               onClick={() => setViewMode('table')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-colors cursor-pointer ${
                 viewMode === 'table'
-                  ? "bg-white dark:bg-zinc-800 shadow-sm text-amber-600 dark:text-amber-400 font-extrabold"
-                  : "text-slate-600 dark:text-zinc-400"
+                  ? "bg-white dark:bg-zinc-800 shadow-xs text-amber-600 dark:text-amber-400 font-bold"
+                  : "text-slate-500 dark:text-zinc-400 hover:text-slate-800"
               }`}
             >
-              <TableIcon size={16} /> Table
+              <TableIcon size={15} /> Table
             </button>
             <button
               onClick={() => setViewMode('kanban')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-colors cursor-pointer ${
                 viewMode === 'kanban'
-                  ? "bg-white dark:bg-zinc-800 shadow-sm text-amber-600 dark:text-amber-400 font-extrabold"
-                  : "text-slate-600 dark:text-zinc-400"
+                  ? "bg-white dark:bg-zinc-800 shadow-xs text-amber-600 dark:text-amber-400 font-bold"
+                  : "text-slate-500 dark:text-zinc-400 hover:text-slate-800"
               }`}
             >
-              <Kanban size={16} /> Kanban
+              <Kanban size={15} /> Kanban
             </button>
           </div>
 
           {/* Export CSV */}
           {userPerms.exportLeads && (
             <motion.button
-              whileTap={{ scale: 0.96 }}
+              whileTap={{ scale: 0.98 }}
               onClick={exportToCSV}
-              className={`px-3.5 py-2 rounded-xl text-xs font-extrabold border flex items-center gap-1.5 transition-colors cursor-pointer ${
+              className={`px-3 py-2 rounded-lg text-xs font-semibold border flex items-center gap-1.5 transition-colors cursor-pointer ${
                 isLight 
-                  ? "bg-slate-50 hover:bg-slate-100 border-slate-300 text-slate-900 hover:border-amber-500/40" 
-                  : "bg-zinc-800 hover:bg-zinc-700 border-zinc-700 text-zinc-100 hover:border-amber-500/40"
+                  ? "bg-white hover:bg-slate-50 border-slate-200/80 text-slate-700 hover:border-slate-300" 
+                  : "bg-zinc-800 hover:bg-zinc-700 border-zinc-700/80 text-zinc-200"
               }`}
               title="Export filtered list to CSV"
             >
-              <DownloadSimple size={16} weight="bold" /> Export CSV
+              <DownloadSimple size={15} weight="bold" /> Export CSV
             </motion.button>
           )}
 
           {/* Add Manual Lead */}
           <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.96 }}
+            whileTap={{ scale: 0.98 }}
             onClick={() => setShowAddLeadModal(true)}
-            className="px-4 py-2 rounded-xl text-xs font-extrabold bg-amber-500 text-slate-950 hover:bg-amber-400 transition-all cursor-pointer flex items-center gap-1.5 shadow-md shadow-amber-500/20"
+            className="px-3.5 py-2 rounded-lg text-xs font-bold bg-amber-500 text-slate-950 hover:bg-amber-400 transition-colors cursor-pointer flex items-center gap-1.5 shadow-xs"
           >
-            <PlusCircle size={18} weight="bold" /> Add Lead
+            <PlusCircle size={16} weight="bold" /> Add Lead
           </motion.button>
         </div>
 
@@ -330,14 +341,14 @@ export default function CrmLeadManager() {
       {/* Main Content Area */}
       {viewMode === 'table' ? (
         /* TABLE VIEW */
-        <div className={`rounded-2xl border overflow-hidden transition-colors ${
-          isLight ? "bg-white border-slate-200/80 shadow-sm" : "bg-zinc-900/90 border-zinc-800/90"
+        <div className={`rounded-xl border overflow-hidden transition-colors ${
+          isLight ? "bg-white border-slate-200/70 shadow-sm shadow-slate-200/50" : "bg-zinc-900/80 border-zinc-800/60 shadow-sm shadow-black/20"
         }`}>
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className={`border-b text-xs font-extrabold uppercase tracking-wider ${
-                  isLight ? "bg-slate-50 border-slate-200/80 text-slate-700" : "bg-zinc-950/60 border-zinc-800 text-zinc-400"
+                <tr className={`border-b text-[11px] font-bold uppercase tracking-wider ${
+                  isLight ? "bg-slate-50/50 border-slate-100 text-slate-400" : "bg-zinc-950/40 border-zinc-800/40 text-zinc-400"
                 }`}>
                   <th className="py-3.5 px-4">Contact & Company</th>
                   <th className="py-3.5 px-4">Score & Fit</th>
@@ -348,7 +359,7 @@ export default function CrmLeadManager() {
                   <th className="py-3.5 px-4 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-zinc-800/80 text-sm">
+              <tbody className="divide-y divide-slate-100/40 dark:divide-zinc-800/40 text-sm">
                 {filteredLeads.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="text-center py-16 px-4">
@@ -379,29 +390,29 @@ export default function CrmLeadManager() {
                   filteredLeads.map((lead) => (
                     <tr
                       key={lead.id}
-                      className={`group transition-colors ${
-                        isLight ? "hover:bg-slate-50/90" : "hover:bg-zinc-800/40"
+                      className={`group transition-colors duration-150 ${
+                        isLight ? "hover:bg-slate-50/80" : "hover:bg-zinc-800/40"
                       }`}
                     >
                       {/* Name & Company */}
-                      <td className="py-4 px-4">
-                        <div className={`font-extrabold text-base ${isLight ? "text-slate-950" : "text-zinc-100"}`}>
+                      <td className="py-3.5 px-4">
+                        <div className={`font-bold text-sm ${isLight ? "text-slate-800" : "text-zinc-100"}`}>
                           {lead.name}
                         </div>
-                        <div className={`text-xs font-semibold ${isLight ? "text-slate-600" : "text-zinc-400"} flex items-center gap-2 mt-0.5`}>
+                        <div className={`text-xs font-normal ${isLight ? "text-slate-500" : "text-zinc-400"} flex items-center gap-1.5 mt-0.5`}>
                           <span>{lead.email}</span>
-                          {lead.company && <span className="font-extrabold">• {lead.company}</span>}
+                          {lead.company && <span className="font-medium text-slate-400 dark:text-zinc-500">• {lead.company}</span>}
                         </div>
                       </td>
 
                       {/* Score & Fit Badge */}
-                      <td className="py-4 px-4">
+                      <td className="py-3.5 px-4">
                         {lead.score !== undefined ? (
-                          <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-black tracking-tight border ${
+                          <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${
                             lead.scoreCategory === 'hot'
-                              ? "bg-gradient-to-r from-red-500/20 to-amber-500/20 text-red-600 dark:text-red-400 border-red-500/40 animate-pulse"
+                              ? "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20"
                               : lead.scoreCategory === 'warm'
-                              ? "bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30"
+                              ? "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/20"
                               : "bg-slate-500/10 text-slate-600 dark:text-zinc-400 border-slate-500/20"
                           }`}>
                             {lead.scoreCategory === 'hot' && "🔥 "}
@@ -415,8 +426,8 @@ export default function CrmLeadManager() {
                       </td>
 
                       {/* Status */}
-                      <td className="py-4 px-4">
-                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs border ${statusBadgeStyle[lead.status]}`}>
+                      <td className="py-3.5 px-4">
+                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-xs border ${statusBadgeStyle[lead.status]}`}>
                           {lead.status === 'new' && <span className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse" />}
                           {lead.status === 'in_negotiation' && <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />}
                           {statusLabels[lead.status]}
@@ -424,41 +435,39 @@ export default function CrmLeadManager() {
                       </td>
 
                       {/* Deal Value */}
-                      <td className={`py-4 px-4 font-black text-amber-600 dark:text-amber-400 tabular-nums`}>
+                      <td className={`py-3.5 px-4 font-bold text-amber-600 dark:text-amber-400 tabular-nums text-sm`}>
                         ${lead.dealValue.toLocaleString()}
                       </td>
 
                       {/* Source */}
-                      <td className={`py-4 px-4 text-xs font-semibold ${isLight ? "text-slate-700" : "text-zinc-300"}`}>
+                      <td className={`py-3.5 px-4 text-xs font-medium ${isLight ? "text-slate-600" : "text-zinc-300"}`}>
                         {lead.source}
                       </td>
 
                       {/* Date */}
-                      <td className={`py-4 px-4 text-xs font-semibold tabular-nums ${isLight ? "text-slate-700" : "text-zinc-300"}`}>
+                      <td className={`py-3.5 px-4 text-xs font-medium tabular-nums ${isLight ? "text-slate-500" : "text-zinc-400"}`}>
                         {new Date(lead.createdAt).toLocaleDateString()}
                       </td>
 
                       {/* Actions */}
-                      <td className="py-4 px-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <motion.button
-                            whileTap={{ scale: 0.92 }}
+                      <td className="py-3.5 px-4 text-right">
+                        <div className="flex items-center justify-end gap-1.5 opacity-80 group-hover:opacity-100 transition-opacity">
+                          <button
                             onClick={() => setSelectedLead(lead)}
-                            className="p-2 rounded-lg text-slate-500 hover:text-amber-600 hover:bg-amber-500/10 transition-colors cursor-pointer"
+                            className="p-1.5 rounded-md text-slate-400 hover:text-amber-600 hover:bg-amber-500/10 transition-colors cursor-pointer"
                             title="View Details"
                           >
-                            <Eye size={18} weight="bold" />
-                          </motion.button>
+                            <Eye size={17} weight="bold" />
+                          </button>
                           
                           {userPerms.deleteLeads && (
-                            <motion.button
-                              whileTap={{ scale: 0.92 }}
+                            <button
                               onClick={() => deleteLead(lead.id)}
-                              className="p-2 rounded-lg text-slate-500 hover:text-red-600 hover:bg-red-500/10 transition-colors cursor-pointer"
+                              className="p-1.5 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-500/10 transition-colors cursor-pointer"
                               title="Delete Lead"
                             >
-                              <Trash size={18} weight="bold" />
-                            </motion.button>
+                              <Trash size={17} weight="bold" />
+                            </button>
                           )}
                         </div>
                       </td>

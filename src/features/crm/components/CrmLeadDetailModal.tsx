@@ -65,32 +65,32 @@ export default function CrmLeadDetailModal({ lead, onClose }: CrmLeadDetailModal
   const isCorp = liveLead.emailType === "company" || isCorporateEmail(liveLead.email);
 
   return (
-    <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
-      isLight ? "bg-slate-950/80" : "bg-black/90"
+    <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 transition-all duration-200 ${
+      isLight ? "bg-slate-950/60 backdrop-blur-xs" : "bg-black/80 backdrop-blur-xs"
     }`}>
-      <div className={`w-full max-w-2xl rounded-3xl p-6 sm:p-8 shadow-2xl border transition-all max-h-[90vh] overflow-y-auto ${
+      <div className={`w-full max-w-2xl rounded-3xl p-6 sm:p-8 shadow-xl border transition-all max-h-[90vh] overflow-y-auto ${
         isLight 
-          ? "bg-white border-slate-300 text-slate-950" 
-          : "bg-zinc-900 border-zinc-800 text-zinc-50"
+          ? "bg-white border-slate-200/70 text-slate-800" 
+          : "bg-zinc-900 border-zinc-800/60 text-zinc-100"
       }`}>
         
         {/* Modal Header */}
-        <div className="flex items-start justify-between pb-5 border-b border-slate-200 dark:border-zinc-800">
+        <div className="flex items-start justify-between pb-4 border-b border-slate-100 dark:border-zinc-800/50">
           <div>
-            <div className="flex items-center gap-3 flex-wrap">
-              <h2 className={`text-2xl font-black tracking-tight ${isLight ? "text-slate-950" : "text-zinc-50"}`}>
+            <div className="flex items-center gap-2.5 flex-wrap">
+              <h2 className={`text-xl sm:text-2xl font-bold tracking-tight ${isLight ? "text-slate-900" : "text-zinc-50"}`}>
                 {liveLead.name}
               </h2>
-              <span className={`text-xs font-black px-3 py-1 rounded-lg border ${statusBadgeStyles[localStatus]}`}>
+              <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-md border ${statusBadgeStyles[localStatus]}`}>
                 {statusOptions.find((s) => s.key === localStatus)?.label}
               </span>
               {liveLead.score !== undefined && (
-                <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-black tracking-tight border shadow-sm ${
+                <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold tracking-tight border ${
                   liveLead.scoreCategory === 'hot'
-                    ? "bg-rose-500/15 text-rose-700 dark:text-rose-400 border-rose-500/40"
+                    ? "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20"
                     : liveLead.scoreCategory === 'warm'
-                    ? "bg-amber-500/15 text-amber-800 dark:text-amber-300 border-amber-500/40"
-                    : "bg-slate-500/15 text-slate-800 dark:text-zinc-300 border-slate-500/30"
+                    ? "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/20"
+                    : "bg-slate-500/10 text-slate-600 dark:text-zinc-400 border-slate-500/20"
                 }`}>
                   {liveLead.scoreCategory === 'hot' && "🔥 "}
                   {liveLead.scoreCategory === 'warm' && "☀️ "}
@@ -99,25 +99,25 @@ export default function CrmLeadDetailModal({ lead, onClose }: CrmLeadDetailModal
                 </span>
               )}
             </div>
-            <p className={`text-xs font-extrabold mt-1.5 ${isLight ? "text-slate-600" : "text-zinc-400"}`}>
-              ID: <span className="font-mono text-slate-700 dark:text-zinc-300">{liveLead.id}</span> • Nguồn: <strong className={isLight ? "text-slate-900" : "text-zinc-200"}>{liveLead.source}</strong>
+            <p className={`text-xs font-medium mt-1 ${isLight ? "text-slate-500" : "text-zinc-400"}`}>
+              ID: <span className="font-mono text-slate-600 dark:text-zinc-300">{liveLead.id}</span> • Nguồn: <strong className={isLight ? "text-slate-800" : "text-zinc-200"}>{liveLead.source}</strong>
             </p>
           </div>
 
           <button
             onClick={onClose}
-            className={`p-2.5 rounded-xl transition-colors cursor-pointer ${
-              isLight ? "text-slate-600 hover:text-slate-950 hover:bg-slate-100" : "text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800"
+            className={`p-2 rounded-xl transition-colors cursor-pointer ${
+              isLight ? "text-slate-400 hover:text-slate-800 hover:bg-slate-100" : "text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800"
             }`}
           >
             <X size={20} weight="bold" />
           </button>
         </div>
 
-        {/* Lead Meta Information Grid (High Contrast Slate-950 Text) */}
+        {/* Lead Meta Information Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 my-6">
           {/* Email Box */}
-          <div className={`p-4 rounded-2xl border ${isLight ? "bg-slate-50/90 border-slate-200" : "bg-zinc-950 border-zinc-800/80"}`}>
+          <div className={`p-4 rounded-2xl border ${isLight ? "bg-slate-50/50 border-slate-200/60" : "bg-zinc-950 border-zinc-800/60"}`}>
             <div className={`flex items-center justify-between text-xs font-extrabold mb-1.5 ${isLight ? "text-slate-700" : "text-zinc-300"}`}>
               <span className="flex items-center gap-1.5"><Envelope size={15} weight="bold" /> Email</span>
               {isCorp && (

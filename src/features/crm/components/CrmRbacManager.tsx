@@ -134,17 +134,17 @@ export default function CrmRbacManager() {
       
       {/* SECTION 1: STAFF ROSTER */}
       <div className={`p-6 rounded-2xl border transition-colors ${
-        isLight ? "bg-white border-slate-200 shadow-sm" : "bg-zinc-900 border-zinc-800"
+        isLight ? "bg-white border-slate-200/60 shadow-sm shadow-slate-200/40" : "bg-zinc-900/80 border-zinc-800/60 shadow-sm shadow-black/20"
       }`}>
         
         {/* Section Header */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-200 dark:border-zinc-800">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-100 dark:border-zinc-800/50">
           <div>
             <div className="flex items-center gap-2">
-              <Users size={22} className="text-amber-500" />
-              <h2 className="text-lg font-extrabold tracking-tight">Team Personnel Roster</h2>
+              <Users size={20} className="text-amber-500" />
+              <h2 className="text-base sm:text-lg font-bold tracking-tight">Team Personnel Roster</h2>
             </div>
-            <p className="text-xs text-slate-600 dark:text-zinc-400 mt-0.5 font-medium">
+            <p className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5 font-medium">
               Manage team accounts, role assignments, and login access.
             </p>
           </div>
@@ -152,9 +152,9 @@ export default function CrmRbacManager() {
           {isSuperAdmin && (
             <button
               onClick={() => setShowAddStaffModal(true)}
-              className="px-4 py-2 rounded-xl text-xs font-extrabold bg-amber-500 text-slate-950 hover:bg-amber-400 transition-all cursor-pointer flex items-center gap-1.5 shadow-md shadow-amber-500/20 active:scale-[0.98]"
+              className="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-amber-500 text-slate-950 hover:bg-amber-400 transition-colors cursor-pointer flex items-center gap-1.5 shadow-xs"
             >
-              <UserPlus size={18} weight="bold" /> Add Team Member
+              <UserPlus size={16} weight="bold" /> Add Team Member
             </button>
           )}
         </div>
@@ -163,8 +163,8 @@ export default function CrmRbacManager() {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className={`border-b text-xs font-extrabold uppercase tracking-wider ${
-                isLight ? "bg-slate-50 border-slate-200 text-slate-700" : "bg-zinc-950/60 border-zinc-800 text-zinc-400"
+              <tr className={`border-b text-[11px] font-bold uppercase tracking-wider ${
+                isLight ? "bg-slate-50/50 border-slate-100 text-slate-400" : "bg-zinc-950/40 border-zinc-800/40 text-zinc-400"
               }`}>
                 <th className="py-3 px-4">Member Name & Email</th>
                 <th className="py-3 px-4">Role Assignment</th>
@@ -173,7 +173,7 @@ export default function CrmRbacManager() {
                 <th className="py-3 px-4 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-zinc-800 text-sm">
+            <tbody className="divide-y divide-slate-100/40 dark:divide-zinc-800/40 text-sm">
               {staffMembers.map((member) => {
                 const isTargetSuperAdmin = member.role === 'super_admin';
                 const canCurrentManageMember = isSuperAdmin || (isManager && !isTargetSuperAdmin);
@@ -262,28 +262,28 @@ export default function CrmRbacManager() {
 
       {/* SECTION 2: RBAC PERMISSION MATRIX */}
       <div className={`p-6 rounded-2xl border transition-colors ${
-        isLight ? "bg-white border-slate-200 shadow-sm" : "bg-zinc-900 border-zinc-800"
+        isLight ? "bg-white border-slate-200/60 shadow-sm shadow-slate-200/40" : "bg-zinc-900/80 border-zinc-800/60 shadow-sm shadow-black/20"
       }`}>
         
         {/* Section Header */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-200 dark:border-zinc-800">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-100 dark:border-zinc-800/50">
           <div>
             <div className="flex items-center gap-2">
-              <UserGear size={22} className="text-amber-500" />
-              <h2 className="text-lg font-extrabold tracking-tight">RBAC Permission Matrix</h2>
+              <UserGear size={20} className="text-amber-500" />
+              <h2 className="text-base sm:text-lg font-bold tracking-tight">RBAC Permission Matrix</h2>
             </div>
-            <p className="text-xs text-slate-600 dark:text-zinc-400 mt-0.5 font-medium">
+            <p className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5 font-medium">
               Granular feature capability mapping per team role.
             </p>
           </div>
 
           {isSuperAdmin ? (
-            <div className="flex items-center gap-2.5">
+            <div className="flex items-center gap-2">
               <button
                 onClick={() => setShowResetWarningModal(true)}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-extrabold border flex items-center gap-1.5 transition-colors cursor-pointer ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold border flex items-center gap-1.5 transition-colors cursor-pointer ${
                   isLight 
-                    ? "bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-300" 
+                    ? "bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200/80" 
                     : "bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border-zinc-700"
                 }`}
                 title="Reset matrix permissions to system factory defaults"
@@ -293,17 +293,17 @@ export default function CrmRbacManager() {
 
               <button
                 onClick={handleSaveMatrix}
-                className={`px-4 py-1.5 rounded-xl text-xs font-extrabold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm ${
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs ${
                   isDirty
-                    ? "bg-amber-500 text-slate-950 hover:bg-amber-400 shadow-amber-500/20"
-                    : "bg-slate-200 dark:bg-zinc-800 text-slate-400 dark:text-zinc-500 cursor-not-allowed"
+                    ? "bg-amber-500 text-slate-950 hover:bg-amber-400"
+                    : "bg-slate-100 dark:bg-zinc-800 text-slate-400 dark:text-zinc-500 cursor-not-allowed"
                 }`}
               >
-                <FloppyDisk size={16} weight="bold" /> Save Changes
+                <FloppyDisk size={15} weight="bold" /> Save Changes
               </button>
             </div>
           ) : (
-            <span className="text-xs font-extrabold px-3 py-1 rounded-lg bg-amber-500/10 text-amber-800 dark:text-amber-400 border border-amber-500/20 flex items-center gap-1.5">
+            <span className="text-xs font-bold px-3 py-1 rounded-lg bg-amber-500/10 text-amber-800 dark:text-amber-400 border border-amber-500/20 flex items-center gap-1.5">
               <Lock size={14} /> Read-Only (Super Admin Required to Modify)
             </span>
           )}
@@ -313,8 +313,8 @@ export default function CrmRbacManager() {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className={`border-b text-xs font-extrabold uppercase tracking-wider ${
-                isLight ? "bg-slate-100/90 border-slate-200 text-slate-800" : "bg-zinc-950/60 border-zinc-800 text-zinc-400"
+              <tr className={`border-b text-[11px] font-bold uppercase tracking-wider ${
+                isLight ? "bg-slate-50/50 border-slate-100 text-slate-400" : "bg-zinc-950/40 border-zinc-800/40 text-zinc-400"
               }`}>
                 <th className="py-3 px-4 w-1/2">Permission Capability</th>
                 <th className="py-3 px-4 text-center">Super Admin</th>
@@ -322,10 +322,10 @@ export default function CrmRbacManager() {
                 <th className="py-3 px-4 text-center">Sales Rep</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-200 dark:divide-zinc-800 text-sm">
+            <tbody className="divide-y divide-slate-100/40 dark:divide-zinc-800/40 text-sm">
               {(Object.keys(permissionLabels) as (keyof RolePermission)[]).map((permKey) => (
                 <tr key={permKey} className={isLight ? "hover:bg-slate-50/80" : "hover:bg-zinc-800/40"}>
-                  <td className={`py-3.5 px-4 font-extrabold ${isLight ? "text-slate-950" : "text-zinc-100"}`}>
+                  <td className={`py-3.5 px-4 font-semibold ${isLight ? "text-slate-800" : "text-zinc-100"}`}>
                     {permissionLabels[permKey]}
                   </td>
 

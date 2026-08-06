@@ -161,16 +161,16 @@ export default function CrmAuditLog() {
 
       {/* Log Timeline with Status Filter */}
       <div className={`p-6 rounded-3xl border transition-colors ${
-        isLight ? "bg-white border-slate-200 shadow-sm" : "bg-zinc-900 border-zinc-800"
+        isLight ? "bg-white border-slate-200/60 shadow-sm shadow-slate-200/40" : "bg-zinc-900/80 border-zinc-800/60 shadow-sm shadow-black/20"
       }`}>
         {/* Timeline Header & Filter Bar */}
-        <div className="space-y-4 mb-6 pb-4 border-b border-slate-200 dark:border-zinc-800">
+        <div className="space-y-4 mb-6 pb-4 border-b border-slate-100 dark:border-zinc-800/50">
           <div className="flex items-center justify-between">
-            <h3 className={`text-sm font-black uppercase tracking-wider ${isLight ? "text-slate-800" : "text-zinc-300"}`}>
+            <h3 className={`text-xs font-bold uppercase tracking-wider ${isLight ? "text-slate-500" : "text-zinc-400"}`}>
               Activity Timeline
             </h3>
-            <span className={`text-xs font-bold px-2.5 py-1 rounded-xl ${
-              isLight ? "bg-slate-100 text-slate-700" : "bg-zinc-800 text-zinc-300"
+            <span className={`text-xs font-semibold px-2.5 py-1 rounded-lg ${
+              isLight ? "bg-slate-100/70 text-slate-600" : "bg-zinc-800/60 text-zinc-300"
             }`}>
               {filteredLogs.length} / {auditLogs.length} records
             </span>
@@ -178,7 +178,7 @@ export default function CrmAuditLog() {
 
           {/* Status Filter Pills Bar */}
           <div className="flex items-center gap-2 flex-wrap">
-            <span className={`text-xs font-bold flex items-center gap-1 mr-1 ${isLight ? "text-slate-500" : "text-zinc-400"}`}>
+            <span className={`text-xs font-semibold flex items-center gap-1 mr-1 ${isLight ? "text-slate-400" : "text-zinc-400"}`}>
               <Funnel size={14} weight="bold" /> Filter:
             </span>
             {FILTER_OPTIONS.map((opt) => {
@@ -191,12 +191,12 @@ export default function CrmAuditLog() {
                 <button
                   key={opt.key}
                   onClick={() => setSelectedFilter(opt.key)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-extrabold border transition-all cursor-pointer ${
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${
                     isActive
-                      ? "bg-amber-500 text-slate-950 border-amber-500 shadow-sm shadow-amber-500/20"
+                      ? "bg-amber-500 text-slate-950 border-amber-500 shadow-xs font-bold"
                       : isLight
-                      ? "bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100"
-                      : "bg-zinc-950 border-zinc-800 text-zinc-300 hover:bg-zinc-850"
+                      ? "bg-slate-50/50 border-slate-200/60 text-slate-600 hover:bg-slate-100/70"
+                      : "bg-zinc-950 border-zinc-800/80 text-zinc-300 hover:bg-zinc-800/60"
                   }`}
                 >
                   {opt.label} <span className="opacity-75 font-mono">({count})</span>
@@ -216,7 +216,7 @@ export default function CrmAuditLog() {
         ) : (
           <div className="relative">
             {/* Timeline line */}
-            <div className={`absolute left-5 top-0 bottom-0 w-px ${isLight ? "bg-slate-200" : "bg-zinc-800"}`} />
+            <div className={`absolute left-5 top-0 bottom-0 w-px ${isLight ? "bg-slate-100" : "bg-zinc-800/50"}`} />
 
             <div className="flex flex-col gap-0">
               {filteredLogs.map((log, idx) => {
