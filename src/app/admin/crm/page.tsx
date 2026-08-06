@@ -110,7 +110,7 @@ export default function CrmAdminPage() {
                     <ShieldWarning size={48} className="mx-auto text-amber-500 mb-3" />
                     <h3 className="text-xl font-bold">Super Admin Access Only</h3>
                     <p className="text-sm text-slate-500 dark:text-zinc-400 mt-2">
-                      Executive Analytics & Financial Dashboards are reserved exclusively for Super Admin.
+                      CEO Dashboard & Financial Intelligence are reserved exclusively for Super Admin.
                     </p>
                   </div>
                 )

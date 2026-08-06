@@ -70,7 +70,7 @@ export default function CrmHeader({ activeTab, setActiveTab, toggleMobileSidebar
 
   const pageTitles: Record<'dashboard' | 'analytics' | 'rbac' | 'settings' | 'audit', string> = {
     dashboard: "Lead Analytics & Workspace",
-    analytics: "Executive Analytics & Financial Intelligence",
+    analytics: "CEO Dashboard & Financial Intelligence",
     rbac: "Team Personnel & RBAC Management",
     settings: "Account & Profile Settings",
     audit: "System Audit Log",

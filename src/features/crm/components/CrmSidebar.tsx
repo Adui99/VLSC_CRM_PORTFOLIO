@@ -40,15 +40,15 @@ export default function CrmSidebar({ activeTab, setActiveTab, setIsOpenMobile }:
   };
 
   return (
-    <aside className={`w-full ${sidebarCollapsed ? 'lg:w-20' : 'lg:w-72 xl:w-80'} border-r flex flex-col shrink-0 transition-all duration-300 ease-in-out ${
+    <aside className={`w-full ${sidebarCollapsed ? 'lg:w-20' : 'lg:w-72 xl:w-80'} border-r flex flex-col shrink-0 transition-all duration-300 [transition-timing-function:cubic-bezier(0.4,0,0.2,1)] ${
       isLight 
         ? "bg-white border-slate-100/80 text-slate-800" 
         : "bg-zinc-900 border-zinc-800/50 text-zinc-100"
     }`}>
       {/* Sidebar Header / Brand Logo */}
-      <div className={`p-4 sm:p-5 border-b border-slate-100/80 dark:border-zinc-800/40 flex items-center ${sidebarCollapsed ? 'lg:justify-center justify-between' : 'justify-between'}`}>
+      <div className={`p-4 sm:p-5 border-b border-slate-100/80 dark:border-zinc-800/40 flex items-center transition-all duration-300 ${sidebarCollapsed ? 'lg:justify-center justify-between' : 'justify-between'}`}>
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 flex items-center justify-center overflow-hidden shrink-0">
+          <div className="w-9 h-9 flex items-center justify-center overflow-hidden shrink-0 mx-auto">
             <img 
               src="/logo.png" 
               alt="KTD Team Logo" 
@@ -94,25 +94,33 @@ export default function CrmSidebar({ activeTab, setActiveTab, setIsOpenMobile }:
           </span>
           <nav className="mt-2 space-y-1">
             
-            {/* Executive Analytics (Visible FIRST for Super Admin) */}
+            {/* CEO Dashboard (Visible FIRST for Super Admin) */}
             {isSuperAdmin && (
               <button
                 onClick={() => {
                   setActiveTab('analytics');
                   if (setIsOpenMobile) setIsOpenMobile(false);
                 }}
-                title={sidebarCollapsed ? "Executive Analytics" : undefined}
-                className={`w-full flex items-center ${sidebarCollapsed ? 'lg:justify-center justify-between' : 'justify-between'} px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-colors duration-200 cursor-pointer outline-none select-none ${
-                  activeTab === 'analytics'
-                    ? "bg-amber-500 text-slate-950 shadow-xs font-bold"
-                    : isLight
-                    ? "text-slate-700 hover:bg-slate-100/70 hover:text-slate-900"
-                    : "text-zinc-300 hover:bg-zinc-800/60 hover:text-zinc-100"
+                title="CEO Dashboard"
+                className={`w-full transition-all duration-300 ease-in-out cursor-pointer outline-none select-none ${
+                  sidebarCollapsed
+                    ? "lg:w-11 lg:h-11 lg:mx-auto lg:p-0 flex items-center justify-center rounded-xl " +
+                      (activeTab === 'analytics'
+                        ? "bg-amber-500 text-slate-950 shadow-md"
+                        : isLight
+                        ? "text-slate-700 hover:bg-slate-100"
+                        : "text-zinc-300 hover:bg-zinc-800")
+                    : "flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-semibold " +
+                      (activeTab === 'analytics'
+                        ? "bg-amber-500 text-slate-950 shadow-xs font-bold"
+                        : isLight
+                        ? "text-slate-700 hover:bg-slate-100/70 hover:text-slate-900"
+                        : "text-zinc-300 hover:bg-zinc-800/60 hover:text-zinc-100")
                 }`}
               >
                 <div className="flex items-center gap-3">
                   <ChartBar size={20} weight={activeTab === 'analytics' ? "bold" : "regular"} className="shrink-0" />
-                  <span className={`${sidebarCollapsed ? 'lg:hidden' : 'block'}`}>Executive Analytics</span>
+                  <span className={`${sidebarCollapsed ? 'lg:hidden' : 'block'}`}>CEO Dashboard</span>
                 </div>
                 {!sidebarCollapsed && (
                   <span className="hidden lg:inline text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-800 dark:text-amber-300">
@@ -131,13 +139,21 @@ export default function CrmSidebar({ activeTab, setActiveTab, setIsOpenMobile }:
                 setActiveTab('dashboard');
                 if (setIsOpenMobile) setIsOpenMobile(false);
               }}
-              title={sidebarCollapsed ? "Lead Analytics" : undefined}
-              className={`w-full flex items-center ${sidebarCollapsed ? 'lg:justify-center justify-between' : 'justify-between'} px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-colors duration-200 cursor-pointer outline-none select-none ${
-                activeTab === 'dashboard'
-                  ? "bg-amber-500 text-slate-950 shadow-xs font-bold"
-                  : isLight
-                  ? "text-slate-700 hover:bg-slate-100/70 hover:text-slate-900"
-                  : "text-zinc-300 hover:bg-zinc-800/60 hover:text-zinc-100"
+              title="Lead Analytics"
+              className={`w-full transition-all duration-300 ease-in-out cursor-pointer outline-none select-none ${
+                sidebarCollapsed
+                  ? "lg:w-11 lg:h-11 lg:mx-auto lg:p-0 flex items-center justify-center rounded-xl " +
+                    (activeTab === 'dashboard'
+                      ? "bg-amber-500 text-slate-950 shadow-md"
+                      : isLight
+                      ? "text-slate-700 hover:bg-slate-100"
+                      : "text-zinc-300 hover:bg-zinc-800")
+                  : "flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-semibold " +
+                    (activeTab === 'dashboard'
+                      ? "bg-amber-500 text-slate-950 shadow-xs font-bold"
+                      : isLight
+                      ? "text-slate-700 hover:bg-slate-100/70 hover:text-slate-900"
+                      : "text-zinc-300 hover:bg-zinc-800/60 hover:text-zinc-100")
               }`}
             >
               <div className="flex items-center gap-3">
@@ -169,13 +185,21 @@ export default function CrmSidebar({ activeTab, setActiveTab, setIsOpenMobile }:
                   setActiveTab('rbac');
                   if (setIsOpenMobile) setIsOpenMobile(false);
                 }}
-                title={sidebarCollapsed ? "Personnel & RBAC" : undefined}
-                className={`w-full flex items-center ${sidebarCollapsed ? 'lg:justify-center justify-between' : 'justify-between'} px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-colors duration-200 cursor-pointer outline-none select-none ${
-                  activeTab === 'rbac'
-                    ? "bg-amber-500 text-slate-950 shadow-xs font-bold"
-                    : isLight
-                    ? "text-slate-700 hover:bg-slate-100/70 hover:text-slate-900"
-                    : "text-zinc-300 hover:bg-zinc-800/60 hover:text-zinc-100"
+                title="Personnel & RBAC"
+                className={`w-full transition-all duration-300 ease-in-out cursor-pointer outline-none select-none ${
+                  sidebarCollapsed
+                    ? "lg:w-11 lg:h-11 lg:mx-auto lg:p-0 flex items-center justify-center rounded-xl " +
+                      (activeTab === 'rbac'
+                        ? "bg-amber-500 text-slate-950 shadow-md"
+                        : isLight
+                        ? "text-slate-700 hover:bg-slate-100"
+                        : "text-zinc-300 hover:bg-zinc-800")
+                    : "flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-semibold " +
+                      (activeTab === 'rbac'
+                        ? "bg-amber-500 text-slate-950 shadow-xs font-bold"
+                        : isLight
+                        ? "text-slate-700 hover:bg-slate-100/70 hover:text-slate-900"
+                        : "text-zinc-300 hover:bg-zinc-800/60 hover:text-zinc-100")
                 }`}
               >
                 <div className="flex items-center gap-3">
@@ -208,13 +232,21 @@ export default function CrmSidebar({ activeTab, setActiveTab, setIsOpenMobile }:
                   setActiveTab('audit');
                   if (setIsOpenMobile) setIsOpenMobile(false);
                 }}
-                title={sidebarCollapsed ? "System Audit Log" : undefined}
-                className={`w-full flex items-center ${sidebarCollapsed ? 'lg:justify-center justify-between' : 'justify-between'} px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-colors duration-200 cursor-pointer outline-none select-none ${
-                  activeTab === 'audit'
-                    ? "bg-amber-500 text-slate-950 shadow-xs font-bold"
-                    : isLight
-                    ? "text-slate-700 hover:bg-slate-100/70 hover:text-slate-900"
-                    : "text-zinc-300 hover:bg-zinc-800/60 hover:text-zinc-100"
+                title="System Audit Log"
+                className={`w-full transition-all duration-300 ease-in-out cursor-pointer outline-none select-none ${
+                  sidebarCollapsed
+                    ? "lg:w-11 lg:h-11 lg:mx-auto lg:p-0 flex items-center justify-center rounded-xl " +
+                      (activeTab === 'audit'
+                        ? "bg-amber-500 text-slate-950 shadow-md"
+                        : isLight
+                        ? "text-slate-700 hover:bg-slate-100"
+                        : "text-zinc-300 hover:bg-zinc-800")
+                    : "flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-semibold " +
+                      (activeTab === 'audit'
+                        ? "bg-amber-500 text-slate-950 shadow-xs font-bold"
+                        : isLight
+                        ? "text-slate-700 hover:bg-slate-100/70 hover:text-slate-900"
+                        : "text-zinc-300 hover:bg-zinc-800/60 hover:text-zinc-100")
                 }`}
               >
                 <div className="flex items-center gap-3">
@@ -230,13 +262,21 @@ export default function CrmSidebar({ activeTab, setActiveTab, setIsOpenMobile }:
                 setActiveTab('settings');
                 if (setIsOpenMobile) setIsOpenMobile(false);
               }}
-              title={sidebarCollapsed ? "Account Settings" : undefined}
-              className={`w-full flex items-center ${sidebarCollapsed ? 'lg:justify-center justify-between' : 'justify-between'} px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-colors duration-200 cursor-pointer outline-none select-none ${
-                activeTab === 'settings'
-                  ? "bg-amber-500 text-slate-950 shadow-xs font-bold"
-                  : isLight
-                  ? "text-slate-700 hover:bg-slate-100/70 hover:text-slate-900"
-                  : "text-zinc-300 hover:bg-zinc-800/60 hover:text-zinc-100"
+              title="Account Settings"
+              className={`w-full transition-all duration-300 ease-in-out cursor-pointer outline-none select-none ${
+                sidebarCollapsed
+                  ? "lg:w-11 lg:h-11 lg:mx-auto lg:p-0 flex items-center justify-center rounded-xl " +
+                    (activeTab === 'settings'
+                      ? "bg-amber-500 text-slate-950 shadow-md"
+                      : isLight
+                      ? "text-slate-700 hover:bg-slate-100"
+                      : "text-zinc-300 hover:bg-zinc-800")
+                  : "flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-semibold " +
+                    (activeTab === 'settings'
+                      ? "bg-amber-500 text-slate-950 shadow-xs font-bold"
+                      : isLight
+                      ? "text-slate-700 hover:bg-slate-100/70 hover:text-slate-900"
+                      : "text-zinc-300 hover:bg-zinc-800/60 hover:text-zinc-100")
               }`}
             >
               <div className="flex items-center gap-3">
@@ -296,10 +336,12 @@ export default function CrmSidebar({ activeTab, setActiveTab, setIsOpenMobile }:
           <button
             onClick={handleInspectNewLead}
             title={`${newLeads} Actionable Inbound Leads`}
-            className="hidden lg:flex flex-col items-center justify-center p-3 rounded-2xl border-2 bg-gradient-to-br from-amber-500/20 to-orange-500/10 border-amber-500/40 text-amber-400 hover:border-amber-400 shadow-md shadow-amber-500/20 transition-all w-full cursor-pointer group"
+            className="hidden lg:flex items-center justify-center w-11 h-11 mx-auto rounded-xl border-2 bg-gradient-to-br from-amber-500/20 to-orange-500/10 border-amber-500/40 text-amber-400 hover:border-amber-400 shadow-md shadow-amber-500/20 transition-all cursor-pointer group relative"
           >
-            <Sparkle size={18} weight="fill" className="animate-pulse text-amber-500" />
-            <span className="text-xs font-black mt-1 tabular-nums">{newLeads}</span>
+            <Sparkle size={20} weight="fill" className="animate-pulse text-amber-500" />
+            <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 bg-amber-500 text-slate-950 font-black text-[10px] rounded-full flex items-center justify-center shadow-xs">
+              {newLeads}
+            </span>
           </button>
         )}
       </div>

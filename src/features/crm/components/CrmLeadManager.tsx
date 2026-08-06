@@ -13,6 +13,10 @@ import {
   PlusCircle,
   FunnelX,
   X,
+  CaretLeft,
+  CaretRight,
+  CaretDoubleLeft,
+  CaretDoubleRight,
 } from "@phosphor-icons/react";
 import { motion } from "framer-motion";
 import {
@@ -29,17 +33,29 @@ import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-
 import { CSS } from "@dnd-kit/utilities";
 import CrmLeadDetailModal from "./CrmLeadDetailModal";
 import { isCorporateEmail } from "@/features/crm/utils/calculateLeadScore";
+import { getLeadServices } from "@/features/crm/utils/crmMetrics";
 
 export default function CrmLeadManager() {
-  const { leads, theme, deleteLead, permissions, currentUser, addLead, inspectingLead, setInspectingLead, updateLeadStatus, reorderLeadsInColumn, leadStatusFilter, setLeadStatusFilter } = useCrmStore();
+  const { leads, staffMembers, theme, deleteLead, permissions, currentUser, addLead, inspectingLead, setInspectingLead, updateLeadStatus, reorderLeadsInColumn, leadStatusFilter, setLeadStatusFilter } = useCrmStore();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
+  const [selectedRepFilter, setSelectedRepFilter] = useState<string>("all");
+  const [selectedDealRangeFilter, setSelectedDealRangeFilter] = useState<string>("all");
+  const [selectedScoreCategoryFilter, setSelectedScoreCategoryFilter] = useState<string>("all");
+
+  // Pagination State (Max 10-15 leads per page)
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   useEffect(() => {
     if (leadStatusFilter) {
       setSelectedStatus(leadStatusFilter);
     }
   }, [leadStatusFilter]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, selectedStatus, selectedRepFilter, selectedDealRangeFilter, selectedScoreCategoryFilter, itemsPerPage]);
   const [viewMode, setViewMode] = useState<'table' | 'kanban'>('table');
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [showAddLeadModal, setShowAddLeadModal] = useState(false);
@@ -119,6 +135,32 @@ export default function CrmLeadManager() {
   const currentRole = currentUser?.role || 'sales_rep';
   const userPerms = permissions[currentRole];
 
+  // Helper function to resolve staff ID or name to display name
+  const getStaffDisplayName = (assigned?: string) => {
+    if (!assigned) return "";
+    const staff = staffMembers.find((s) => s.id === assigned || s.name === assigned || s.email === assigned);
+    return staff ? staff.name : assigned;
+  };
+
+  // Populate available reps from both registered staffMembers and existing leads
+  const availableReps = Array.from(
+    new Set([
+      ...staffMembers.map((s) => s.name),
+      ...leads.map((l) => getStaffDisplayName(l.assignedTo)).filter(Boolean),
+    ])
+  ) as string[];
+
+  const hasActiveFilters = searchQuery !== "" || selectedStatus !== "all" || selectedRepFilter !== "all" || selectedDealRangeFilter !== "all" || selectedScoreCategoryFilter !== "all";
+
+  const clearAllFilters = () => {
+    setSearchQuery("");
+    setSelectedStatus("all");
+    setSelectedRepFilter("all");
+    setSelectedDealRangeFilter("all");
+    setSelectedScoreCategoryFilter("all");
+    setLeadStatusFilter("all");
+  };
+
   // Filtering & Sorting (Newest leads prioritized on top)
   const filteredLeads = leads
     .filter((lead) => {
@@ -128,10 +170,23 @@ export default function CrmLeadManager() {
         (lead.company && lead.company.toLowerCase().includes(searchQuery.toLowerCase()));
 
       const matchesStatus = selectedStatus === "all" || lead.status === selectedStatus;
+      const matchesRep = selectedRepFilter === "all" || getStaffDisplayName(lead.assignedTo) === selectedRepFilter || lead.assignedTo === selectedRepFilter;
+      const matchesScore = selectedScoreCategoryFilter === "all" || lead.scoreCategory === selectedScoreCategoryFilter;
 
-      return matchesSearch && matchesStatus;
+      let matchesDealRange = true;
+      if (selectedDealRangeFilter === "<10k") matchesDealRange = lead.dealValue < 10000;
+      else if (selectedDealRangeFilter === "10k-50k") matchesDealRange = lead.dealValue >= 10000 && lead.dealValue <= 50000;
+      else if (selectedDealRangeFilter === ">50k") matchesDealRange = lead.dealValue > 50000;
+
+      return matchesSearch && matchesStatus && matchesRep && matchesScore && matchesDealRange;
     })
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+  // Pagination Calculations
+  const totalPages = Math.ceil(filteredLeads.length / itemsPerPage) || 1;
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = Math.min(startIndex + itemsPerPage, filteredLeads.length);
+  const paginatedLeads = filteredLeads.slice(startIndex, endIndex);
 
   // CSV Export
   const exportToCSV = () => {
@@ -267,7 +322,7 @@ export default function CrmLeadManager() {
                 setSelectedStatus(e.target.value);
                 setLeadStatusFilter(e.target.value);
               }}
-              className={`w-full sm:w-auto px-3.5 py-2 rounded-lg text-xs font-semibold border transition-all focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500/60 cursor-pointer ${
+              className={`w-full sm:w-auto px-3 py-2 rounded-lg text-xs font-semibold border transition-all focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500/60 cursor-pointer ${
                 isLight ? "bg-slate-50/50 border-slate-200/80 text-slate-800 hover:border-slate-300" : "bg-zinc-950 border-zinc-800 text-zinc-200 hover:border-zinc-700"
               }`}
             >
@@ -279,6 +334,67 @@ export default function CrmLeadManager() {
               <option value="closed_lost">Closed Lost</option>
             </select>
           </div>
+
+          {/* Sales Rep Filter */}
+          <div className="relative w-full sm:w-auto">
+            <select
+              value={selectedRepFilter}
+              onChange={(e) => setSelectedRepFilter(e.target.value)}
+              className={`w-full sm:w-auto px-3 py-2 rounded-lg text-xs font-semibold border transition-all focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500/60 cursor-pointer ${
+                isLight ? "bg-slate-50/50 border-slate-200/80 text-slate-800 hover:border-slate-300" : "bg-zinc-950 border-zinc-800 text-zinc-200 hover:border-zinc-700"
+              }`}
+            >
+              <option value="all">All Sales Reps</option>
+              {availableReps.map((rep) => (
+                <option key={rep} value={rep}>
+                  {rep}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Deal Value Range Filter */}
+          <div className="relative w-full sm:w-auto">
+            <select
+              value={selectedDealRangeFilter}
+              onChange={(e) => setSelectedDealRangeFilter(e.target.value)}
+              className={`w-full sm:w-auto px-3 py-2 rounded-lg text-xs font-semibold border transition-all focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500/60 cursor-pointer ${
+                isLight ? "bg-slate-50/50 border-slate-200/80 text-slate-800 hover:border-slate-300" : "bg-zinc-950 border-zinc-800 text-zinc-200 hover:border-zinc-700"
+              }`}
+            >
+              <option value="all">All Deal Sizes</option>
+              <option value="<10k">&lt; $10,000</option>
+              <option value="10k-50k">$10,000 - $50,000</option>
+              <option value=">50k">&gt; $50,000</option>
+            </select>
+          </div>
+
+          {/* Score Category Filter */}
+          <div className="relative w-full sm:w-auto">
+            <select
+              value={selectedScoreCategoryFilter}
+              onChange={(e) => setSelectedScoreCategoryFilter(e.target.value)}
+              className={`w-full sm:w-auto px-3 py-2 rounded-lg text-xs font-semibold border transition-all focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500/60 cursor-pointer ${
+                isLight ? "bg-slate-50/50 border-slate-200/80 text-slate-800 hover:border-slate-300" : "bg-zinc-950 border-zinc-800 text-zinc-200 hover:border-zinc-700"
+              }`}
+            >
+              <option value="all">All Fit Scores</option>
+              <option value="hot">🔥 Hot (≥80 pts)</option>
+              <option value="warm">☀️ Warm (50-79 pts)</option>
+              <option value="cold">❄️ Cold (&lt;50 pts)</option>
+            </select>
+          </div>
+
+          {/* Clear Filters button */}
+          {hasActiveFilters && (
+            <button
+              onClick={clearAllFilters}
+              className="px-2.5 py-1.5 rounded-lg text-xs font-extrabold bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 hover:bg-rose-500/20 transition-colors shrink-0 flex items-center gap-1 cursor-pointer"
+              title="Clear all filters"
+            >
+              <X size={14} weight="bold" /> Reset
+            </button>
+          )}
         </div>
 
         {/* View Switcher & Actions */}
@@ -387,7 +503,7 @@ export default function CrmLeadManager() {
                     </td>
                   </tr>
                 ) : (
-                  filteredLeads.map((lead) => (
+                  paginatedLeads.map((lead) => (
                     <tr
                       key={lead.id}
                       className={`group transition-colors duration-150 ${
@@ -477,6 +593,108 @@ export default function CrmLeadManager() {
               </tbody>
             </table>
           </div>
+
+          {/* Pagination Controls */}
+          {filteredLeads.length > 0 && (
+            <div className={`px-4 py-3 border-t flex flex-col sm:flex-row items-center justify-between gap-3 text-xs font-medium ${
+              isLight ? "bg-slate-50/60 border-slate-100 text-slate-600" : "bg-zinc-950/60 border-zinc-800/60 text-zinc-400"
+            }`}>
+              {/* Left: Summary text & itemsPerPage selector */}
+              <div className="flex items-center gap-3">
+                <span>
+                  Hiển thị <strong className={isLight ? "text-slate-900" : "text-zinc-100"}>{startIndex + 1}–{endIndex}</strong> trên tổng số <strong className={isLight ? "text-slate-900" : "text-zinc-100"}>{filteredLeads.length}</strong> leads
+                </span>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-slate-400 dark:text-zinc-500">|</span>
+                  <select
+                    value={itemsPerPage}
+                    onChange={(e) => setItemsPerPage(Number(e.target.value))}
+                    className={`px-2 py-1 rounded-md text-xs font-bold border transition-colors cursor-pointer ${
+                      isLight ? "bg-white border-slate-200 text-slate-700" : "bg-zinc-900 border-zinc-800 text-zinc-300"
+                    }`}
+                  >
+                    <option value={10}>10 / trang</option>
+                    <option value={15}>15 / trang</option>
+                    <option value={25}>25 / trang</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Right: Page Navigation Buttons */}
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => setCurrentPage(1)}
+                  disabled={currentPage === 1}
+                  className={`p-1.5 rounded-lg border transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
+                    isLight ? "bg-white hover:bg-slate-100 border-slate-200 text-slate-700" : "bg-zinc-900 hover:bg-zinc-800 border-zinc-800 text-zinc-300"
+                  }`}
+                  title="Trang đầu"
+                >
+                  <CaretDoubleLeft size={14} weight="bold" />
+                </button>
+
+                <button
+                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                  className={`p-1.5 rounded-lg border transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
+                    isLight ? "bg-white hover:bg-slate-100 border-slate-200 text-slate-700" : "bg-zinc-900 hover:bg-zinc-800 border-zinc-800 text-zinc-300"
+                  }`}
+                  title="Trang trước"
+                >
+                  <CaretLeft size={14} weight="bold" />
+                </button>
+
+                {/* Page number buttons */}
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1)
+                    .filter((p) => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1)
+                    .map((page, idx, arr) => {
+                      const prevPage = arr[idx - 1];
+                      const showEllipsis = prevPage && page - prevPage > 1;
+                      return (
+                        <div key={page} className="flex items-center gap-1">
+                          {showEllipsis && <span className="px-1 text-slate-400 dark:text-zinc-600">...</span>}
+                          <button
+                            onClick={() => setCurrentPage(page)}
+                            className={`min-w-[28px] h-7 px-2 rounded-lg text-xs font-black transition-all cursor-pointer ${
+                              currentPage === page
+                                ? "bg-amber-500 text-slate-950 shadow-xs"
+                                : isLight
+                                ? "bg-white hover:bg-slate-100 border border-slate-200 text-slate-700"
+                                : "bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-300"
+                            }`}
+                          >
+                            {page}
+                          </button>
+                        </div>
+                      );
+                    })}
+                </div>
+
+                <button
+                  onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                  disabled={currentPage === totalPages}
+                  className={`p-1.5 rounded-lg border transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
+                    isLight ? "bg-white hover:bg-slate-100 border-slate-200 text-slate-700" : "bg-zinc-900 hover:bg-zinc-800 border-zinc-800 text-zinc-300"
+                  }`}
+                  title="Trang sau"
+                >
+                  <CaretRight size={14} weight="bold" />
+                </button>
+
+                <button
+                  onClick={() => setCurrentPage(totalPages)}
+                  disabled={currentPage === totalPages}
+                  className={`p-1.5 rounded-lg border transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
+                    isLight ? "bg-white hover:bg-slate-100 border-slate-200 text-slate-700" : "bg-zinc-900 hover:bg-zinc-800 border-zinc-800 text-zinc-300"
+                  }`}
+                  title="Trang cuối"
+                >
+                  <CaretDoubleRight size={14} weight="bold" />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       ) : (
         /* KANBAN VIEW — with Drag & Drop */
@@ -869,7 +1087,7 @@ function KanbanColumn({ statusKey, label, dotColor, leads, totalValue, isLight, 
   return (
     <div
       ref={setNodeRef}
-      className={`p-3.5 rounded-2xl border flex flex-col transition-all duration-200 ${
+      className={`group p-3.5 rounded-2xl border flex flex-col transition-all duration-200 ${
         isLocked
           ? isLight
             ? "bg-slate-200/60 border-slate-300/60 opacity-80"
@@ -906,9 +1124,9 @@ function KanbanColumn({ statusKey, label, dotColor, leads, totalValue, isLight, 
         </div>
       </div>
 
-      {/* Cards — max 5 leads visible (~510px), hidden scrollbar */}
+      {/* Cards — scrollable container with hover-to-show scrollbar UI */}
       <SortableContext items={leads.map((l) => l.id)} strategy={verticalListSortingStrategy}>
-        <div className="flex flex-col gap-2.5 max-h-[510px] overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden pr-0.5">
+        <div className="flex flex-col gap-2.5 flex-1 min-h-0 max-h-[540px] overflow-y-auto overscroll-contain touch-pan-y pr-1 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-transparent group-hover:[&::-webkit-scrollbar-thumb]:bg-slate-400/70 dark:group-hover:[&::-webkit-scrollbar-thumb]:bg-zinc-600/70 hover:[&::-webkit-scrollbar-thumb]:!bg-amber-500 [&::-webkit-scrollbar-track]:bg-transparent transition-colors duration-200">
           {leads.map((lead) => (
             <KanbanCard key={lead.id} lead={lead} isLight={isLight} onClick={onCardClick} isDraggable={!isLocked} />
           ))}
@@ -946,7 +1164,31 @@ function KanbanCard({ lead, isLight, onClick, isDraggable = true }: KanbanCardPr
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.4 : 1,
+    touchAction: "pan-y" as const,
   };
+
+  const services = getLeadServices(lead).slice(0, 2);
+  const shortServices = services.map((s) => {
+    if (s.includes("Website")) return "Website";
+    if (s.includes("Landing")) return "Landing";
+    if (s.includes("UI/UX")) return "UI/UX";
+    if (s.includes("Bảo trì")) return "Bảo trì";
+    if (s.includes("CRM")) return "CRM";
+    return s.split(" ")[0];
+  });
+
+  const { staffMembers } = useCrmStore();
+  const assignedStaff = staffMembers.find((s) => s.id === lead.assignedTo || s.name === lead.assignedTo || s.email === lead.assignedTo);
+  const repDisplayName = assignedStaff ? assignedStaff.name : (lead.assignedTo || "");
+
+  const repInitials = repDisplayName
+    ? repDisplayName
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .slice(0, 2)
+        .toUpperCase()
+    : "?";
 
   return (
     <div
@@ -954,7 +1196,7 @@ function KanbanCard({ lead, isLight, onClick, isDraggable = true }: KanbanCardPr
       style={style}
       {...(isDraggable ? attributes : {})}
       {...(isDraggable ? listeners : {})}
-      className={`p-3.5 rounded-xl border transition-all duration-200 ${
+      className={`p-3.5 rounded-2xl border transition-all duration-200 ${
         isDraggable ? "cursor-grab active:cursor-grabbing" : "cursor-default"
       } ${
         isLight
@@ -993,16 +1235,50 @@ function KanbanCard({ lead, isLight, onClick, isDraggable = true }: KanbanCardPr
         {lead.company || lead.email}
       </div>
 
+      {/* Service Scope Tags & Source Badge */}
+      <div className="flex items-center gap-1.5 flex-wrap mb-2.5">
+        {shortServices.map((srv) => (
+          <span
+            key={srv}
+            className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${
+              isLight
+                ? "bg-purple-50 text-purple-700 border-purple-200/80"
+                : "bg-purple-500/10 text-purple-300 border-purple-500/20"
+            }`}
+          >
+            {srv}
+          </span>
+        ))}
+        {lead.source && (
+          <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-md truncate max-w-[90px] ${
+            isLight ? "bg-slate-100 text-slate-600" : "bg-zinc-800 text-zinc-400"
+          }`}>
+            {lead.source}
+          </span>
+        )}
+      </div>
+
+      {/* Card Footer: Deal Value, Date & Rep Avatar */}
       <div
         className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-zinc-800/80 cursor-pointer"
         onClick={(e) => { e.stopPropagation(); onClick(lead); }}
       >
-        <span className="text-xs font-extrabold text-amber-600 dark:text-amber-400 tabular-nums">
-          ${lead.dealValue.toLocaleString()}
-        </span>
-        <span className="text-[11px] text-slate-500 dark:text-zinc-500 font-semibold tabular-nums">
-          {new Date(lead.createdAt).toLocaleDateString()}
-        </span>
+        <div>
+          <span className="text-xs font-black text-amber-600 dark:text-amber-400 tabular-nums block">
+            ${lead.dealValue.toLocaleString()}
+          </span>
+          <span className="text-[10px] text-slate-500 dark:text-zinc-500 font-semibold tabular-nums block">
+            {new Date(lead.createdAt).toLocaleDateString()}
+          </span>
+        </div>
+
+        {/* Assigned Rep Avatar Circle */}
+        <div
+          className="w-6 h-6 rounded-full bg-gradient-to-tr from-amber-500 to-orange-500 text-white flex items-center justify-center text-[10px] font-black shrink-0 shadow-xs"
+          title={repDisplayName ? `Assigned to: ${repDisplayName}` : "Unassigned"}
+        >
+          {repInitials}
+        </div>
       </div>
     </div>
   );

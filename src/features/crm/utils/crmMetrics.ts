@@ -35,6 +35,12 @@ export interface CrmMetrics {
   realizedNetProfit: number;
   totalPipelineProfitPotential: number;
 
+  // Additional Executive Metrics
+  winRatePct: number;
+  avgCycleDays: number;
+  stalledDeals: Lead[];
+  salesRepStats: Record<string, { totalLeads: number; closedWonCount: number; closedWonValue: number; totalValue: number; winRatePct: number }>;
+
   // Service Scope Breakdown
   serviceStats: Record<string, { count: number; value: number }>;
   maxServiceValue: number;
@@ -82,7 +88,13 @@ export function getLeadServices(lead: Lead): string[] {
   return Array.from(new Set(matched));
 }
 
-export function calculateCrmMetrics(leads: Lead[], targetMonthlyRevenue = 250000): CrmMetrics {
+export function calculateCrmMetrics(
+  leads: Lead[],
+  targetMonthlyRevenue = 250000,
+  stalledDaysThreshold = 14,
+  stalledValueThreshold = 30000
+): CrmMetrics {
+  const now = Date.now();
   const totalLeads = leads.length;
   const totalDealValue = leads.reduce((sum, l) => sum + (l.dealValue || 0), 0);
   const closedWonLeads = leads.filter((l) => l.status === "closed_won");
@@ -90,8 +102,48 @@ export function calculateCrmMetrics(leads: Lead[], targetMonthlyRevenue = 250000
   const closedWonValue = closedWonLeads.reduce((sum, l) => sum + (l.dealValue || 0), 0);
 
   const conversionRate = totalLeads > 0 ? Math.round((closedWonCount / totalLeads) * 100) : 0;
+  const winRatePct = conversionRate;
   const targetProgress = Math.min(100, Math.round((totalDealValue / targetMonthlyRevenue) * 100));
   const avgDealSize = totalLeads > 0 ? Math.round(totalDealValue / totalLeads) : 0;
+
+  // Average sales cycle days
+  let avgCycleDays = 0;
+  if (closedWonLeads.length > 0) {
+    const totalDays = closedWonLeads.reduce((sum, lead) => {
+      const created = lead.createdAt ? new Date(lead.createdAt).getTime() : now;
+      const diffDays = Math.max(1, Math.round((now - created) / (1000 * 60 * 60 * 24)));
+      return sum + diffDays;
+    }, 0);
+    avgCycleDays = Math.round((totalDays / closedWonLeads.length) * 10) / 10;
+  }
+
+  // Stalled deals detection (customizable days in negotiation or deal value threshold)
+  const stalledDeals = leads.filter((l) => {
+    if (l.status !== "in_negotiation" && l.status !== "contacted") return false;
+    const created = l.createdAt ? new Date(l.createdAt).getTime() : now;
+    const ageDays = (now - created) / (1000 * 60 * 60 * 24);
+    return ageDays >= stalledDaysThreshold || (l.dealValue || 0) >= stalledValueThreshold;
+  });
+
+  // Sales Rep performance aggregation
+  const salesRepStats: Record<string, { totalLeads: number; closedWonCount: number; closedWonValue: number; totalValue: number; winRatePct: number }> = {};
+  leads.forEach((l) => {
+    const repName = l.assignedTo || "Chưa phân công";
+    if (!salesRepStats[repName]) {
+      salesRepStats[repName] = { totalLeads: 0, closedWonCount: 0, closedWonValue: 0, totalValue: 0, winRatePct: 0 };
+    }
+    salesRepStats[repName].totalLeads += 1;
+    salesRepStats[repName].totalValue += l.dealValue || 0;
+    if (l.status === "closed_won") {
+      salesRepStats[repName].closedWonCount += 1;
+      salesRepStats[repName].closedWonValue += l.dealValue || 0;
+    }
+  });
+
+  Object.keys(salesRepStats).forEach((rep) => {
+    const stats = salesRepStats[rep];
+    stats.winRatePct = stats.totalLeads > 0 ? Math.round((stats.closedWonCount / stats.totalLeads) * 100) : 0;
+  });
 
   // Negotiation stage
   const negotiationLeads = leads.filter((l) => l.status === "in_negotiation" || l.status === "contacted");
@@ -160,6 +212,10 @@ export function calculateCrmMetrics(leads: Lead[], targetMonthlyRevenue = 250000
     closedWonCount,
     closedWonValue,
     conversionRate,
+    winRatePct,
+    avgCycleDays,
+    stalledDeals,
+    salesRepStats,
     targetMonthlyRevenue,
     targetProgress,
     avgDealSize,

@@ -14,7 +14,9 @@ import {
   Funnel,
   DownloadSimple,
   Trash,
+  MagnifyingGlass,
 } from "@phosphor-icons/react";
+import { motion } from "framer-motion";
 
 const ACTION_CONFIG: Record<AuditAction, { label: string; icon: React.ReactNode; color: string }> = {
   lead_status_changed: {
@@ -56,6 +58,7 @@ const FILTER_OPTIONS: { key: AuditAction | "all"; label: string }[] = [
 export default function CrmAuditLog() {
   const { auditLogs, fetchAuditLogs, theme, currentUser } = useCrmStore();
   const [selectedFilter, setSelectedFilter] = useState<AuditAction | "all">("all");
+  const [searchQuery, setSearchQuery] = useState("");
   const [purging, setPurging] = useState(false);
   const isLight = theme === "light";
   const isSuperAdmin = currentUser?.role === "super_admin";
@@ -63,6 +66,18 @@ export default function CrmAuditLog() {
   useEffect(() => {
     fetchAuditLogs();
   }, [fetchAuditLogs]);
+
+  const getRelativeTimeString = (dateString: string) => {
+    const diffMs = new Date().getTime() - new Date(dateString).getTime();
+    const diffMins = Math.floor(diffMs / (1000 * 60));
+    if (diffMins < 1) return "Vừa xong";
+    if (diffMins < 60) return `${diffMins} phút trước`;
+    const diffHours = Math.floor(diffMins / 60);
+    if (diffHours < 24) return `${diffHours} giờ trước`;
+    const diffDays = Math.floor(diffHours / 24);
+    if (diffDays === 1) return "Hôm qua";
+    return `${diffDays} ngày trước`;
+  };
 
   const handleExportCsv = () => {
     if (auditLogs.length === 0) return;
@@ -109,9 +124,13 @@ export default function CrmAuditLog() {
     }
   };
 
-  const filteredLogs = selectedFilter === "all"
-    ? auditLogs
-    : auditLogs.filter((log) => log.action === selectedFilter);
+  const filteredLogs = auditLogs.filter((log) => {
+    const matchesFilter = selectedFilter === "all" || log.action === selectedFilter;
+    const matchesSearch = searchQuery === "" ||
+      log.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      log.performedBy.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesFilter && matchesSearch;
+  });
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -165,10 +184,27 @@ export default function CrmAuditLog() {
       }`}>
         {/* Timeline Header & Filter Bar */}
         <div className="space-y-4 mb-6 pb-4 border-b border-slate-100 dark:border-zinc-800/50">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <h3 className={`text-xs font-bold uppercase tracking-wider ${isLight ? "text-slate-500" : "text-zinc-400"}`}>
-              Activity Timeline
+              Live Activity Timeline
             </h3>
+
+            {/* Timeline Search Input */}
+            <div className="relative w-full sm:max-w-xs">
+              <MagnifyingGlass size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Lọc hoạt động theo từ khóa..."
+                className={`w-full pl-8 pr-3 py-1.5 rounded-xl text-xs border transition-all focus:outline-none focus:ring-2 focus:ring-amber-500/20 ${
+                  isLight
+                    ? "bg-slate-50 border-slate-200 text-slate-800 font-medium"
+                    : "bg-zinc-950 border-zinc-800 text-zinc-100 font-medium"
+                }`}
+              />
+            </div>
+
             <span className={`text-xs font-semibold px-2.5 py-1 rounded-lg ${
               isLight ? "bg-slate-100/70 text-slate-600" : "bg-zinc-800/60 text-zinc-300"
             }`}>
@@ -210,7 +246,7 @@ export default function CrmAuditLog() {
           <div className="py-16 flex flex-col items-center justify-center gap-3">
             <Spinner size={32} className={`animate-spin ${isLight ? "text-slate-300" : "text-zinc-600"}`} />
             <p className={`text-sm font-semibold ${isLight ? "text-slate-500" : "text-zinc-400"}`}>
-              Không có nhật ký nào phù hợp với bộ lọc đã chọn.
+              Không có nhật ký nào phù hợp với bộ lọc hoặc từ khóa tìm kiếm.
             </p>
           </div>
         ) : (
@@ -221,35 +257,48 @@ export default function CrmAuditLog() {
             <div className="flex flex-col gap-0">
               {filteredLogs.map((log, idx) => {
                 const config = ACTION_CONFIG[log.action];
+                const relativeTime = getRelativeTimeString(log.createdAt);
+
                 return (
-                  <div key={log.id} className={`relative flex gap-4 pb-6 ${idx === filteredLogs.length - 1 ? "pb-0" : ""}`}>
+                  <motion.div
+                    key={log.id}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.25, delay: idx * 0.03 }}
+                    className={`relative flex gap-4 pb-6 ${idx === filteredLogs.length - 1 ? "pb-0" : ""}`}
+                  >
                     {/* Timeline dot with icon */}
-                    <div className={`relative z-10 flex-shrink-0 w-10 h-10 rounded-full border-2 flex items-center justify-center ${config.color}`}>
+                    <div className={`relative z-10 flex-shrink-0 w-10 h-10 rounded-full border-2 flex items-center justify-center shadow-xs ${config.color}`}>
                       {config.icon}
                     </div>
 
                     {/* Content */}
-                    <div className={`flex-1 p-4 rounded-2xl border transition-colors mt-0.5 ${
-                      isLight ? "bg-slate-50 border-slate-200" : "bg-zinc-950/60 border-zinc-800"
+                    <div className={`flex-1 p-4 rounded-2xl border transition-all duration-200 hover:shadow-md ${
+                      isLight ? "bg-slate-50/80 border-slate-200/90 hover:bg-white" : "bg-zinc-950/60 border-zinc-800/80 hover:bg-zinc-900/80"
                     }`}>
                       <div className="flex flex-wrap items-start justify-between gap-2 mb-1.5">
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className={`text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md border ${config.color}`}>
                             {config.label}
                           </span>
-                          <span className={`text-xs font-bold ${isLight ? "text-slate-700" : "text-zinc-300"}`}>
-                            by {log.performedBy}
+                          <span className={`text-xs font-bold ${isLight ? "text-slate-800" : "text-zinc-200"}`}>
+                            by <strong className="text-amber-600 dark:text-amber-400">{log.performedBy}</strong>
                           </span>
                         </div>
-                        <span className={`text-[10px] font-semibold tabular-nums ${isLight ? "text-slate-500" : "text-zinc-400"}`}>
-                          {new Date(log.createdAt).toLocaleString()}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                            ⏱ {relativeTime}
+                          </span>
+                          <span className={`text-[10px] font-semibold tabular-nums ${isLight ? "text-slate-500" : "text-zinc-400"}`}>
+                            {new Date(log.createdAt).toLocaleString()}
+                          </span>
+                        </div>
                       </div>
                       <p className={`text-xs leading-relaxed font-medium ${isLight ? "text-slate-700" : "text-zinc-300"}`}>
                         {log.description}
                       </p>
                     </div>
-                  </div>
+                  </motion.div>
                 );
               })}
             </div>

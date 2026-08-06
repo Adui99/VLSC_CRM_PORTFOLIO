@@ -101,4 +101,37 @@ describe("CRM Super Admin Executive Analytics Data Synchronization", () => {
     assert.ok(metrics.serviceStats["Thiết kế Website & WebGL"].value >= 100000);
     assert.ok(metrics.maxServiceValue >= 100000);
   });
+
+  test("calculates win rate, sales velocity, stalled deals, and sales rep performance", () => {
+    const leadsWithReps: Lead[] = [
+      ...mockLeads,
+      {
+        id: "lead-4",
+        name: "Stalled Enterprise",
+        email: "stalled@ent.com",
+        phone: "0901112223",
+        source: "Event",
+        status: "in_negotiation",
+        dealValue: 80000,
+        score: 75,
+        scoreCategory: "warm",
+        createdAt: "2026-07-01", // Old date > 14 days
+        assignedTo: "Nguyễn Văn A",
+        notes: [],
+      },
+    ];
+    mockLeads[0].assignedTo = "Nguyễn Văn A";
+    mockLeads[1].assignedTo = "Trần Thị B";
+
+    const metrics = calculateCrmMetrics(leadsWithReps);
+    assert.equal(metrics.winRatePct, 25); // 1 closed_won / 4 total leads = 25%
+    assert.ok(metrics.stalledDeals.length >= 1);
+    assert.ok(metrics.stalledDeals.some((d) => d.id === "lead-4"));
+    assert.ok(metrics.salesRepStats["Nguyễn Văn A"]);
+    assert.equal(metrics.salesRepStats["Nguyễn Văn A"].closedWonValue, 100000);
+
+    // Test custom threshold parameters (e.g. strict threshold: 30 days & $100,000 value)
+    const customMetrics = calculateCrmMetrics(leadsWithReps, 250000, 30, 100000);
+    assert.equal(customMetrics.stalledDeals.length, 1); // Only lead-4 aged > 30 days matches
+  });
 });
